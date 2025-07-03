@@ -18,6 +18,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://comeries.netlify.app",
+      "https://6866027d0b5a0789220023ea--comeries.netlify.app",
       // 실제 Netlify 배포 주소로 교체
     ],
     credentials: true,

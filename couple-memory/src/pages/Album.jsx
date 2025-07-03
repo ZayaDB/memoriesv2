@@ -54,25 +54,31 @@ const Button = styled.button`
   }
 `;
 const PhotoList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1.5em;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1em;
   width: 100%;
-  max-width: 350px;
+  max-width: 400px;
+  @media (min-width: 600px) {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 600px;
+  }
 `;
 const PhotoCard = styled.div`
   background: ${({ theme }) => theme.colors.secondary};
   border-radius: 12px;
   box-shadow: ${({ theme }) => theme.shadow};
-  padding: 1em;
+  padding: 0.5em;
   display: flex;
   flex-direction: column;
   align-items: center;
 `;
 const Img = styled.img`
-  max-width: 100%;
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
   border-radius: 10px;
-  margin-bottom: 0.5em;
+  margin-bottom: 0.3em;
 `;
 const Caption = styled.div`
   color: ${({ theme }) => theme.colors.primary};
