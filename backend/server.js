@@ -12,20 +12,17 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// CORS 허용 (Netlify 프론트엔드 도메인으로 제한 가능)
-app.use(cors());
+// CORS 허용 (Netlify 프론트엔드 도메인과 로컬 개발 모두 허용)
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "comeries.netlify.app", // 실제 Netlify 배포 주소로 교체
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
-
-// 커플 비밀번호 인증 미들웨어
-app.use((req, res, next) => {
-  const secret = req.headers["x-couple-secret"];
-  if (!secret || secret !== process.env.COUPLE_SECRET) {
-    return res
-      .status(401)
-      .json({ message: "Unauthorized: 커플 비밀번호가 필요해요!" });
-  }
-  next();
-});
 
 // MongoDB 연결
 mongoose
