@@ -15,12 +15,18 @@ const PORT = process.env.PORT || 4000;
 // CORS 허용 (Netlify 프론트엔드 도메인과 로컬 개발 모두 허용)
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://comeries.netlify.app",
-      "https://6866027d0b5a0789220023ea--comeries.netlify.app",
-      // 실제 Netlify 배포 주소로 교체
-    ],
+    origin: (origin, callback) => {
+      if (
+        !origin ||
+        origin === "http://localhost:5173" ||
+        origin === "https://comeries.netlify.app" ||
+        /^https:\/\/[a-z0-9]+--comeries\.netlify\.app$/.test(origin)
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
