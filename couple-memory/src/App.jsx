@@ -3,7 +3,6 @@ import styled from "styled-components";
 import Home from "./pages/Home";
 import Album from "./pages/Album";
 import Planner from "./pages/Planner";
-import Profile from "./pages/Profile";
 import BucketList from "./pages/BucketList";
 
 const Nav = styled.nav`
@@ -45,14 +44,12 @@ function App() {
         <Route path="/album" element={<Album />} />
         <Route path="/planner" element={<Planner />} />
         <Route path="/bucketlist" element={<BucketList />} />
-        <Route path="/profile" element={<Profile />} />
       </Routes>
       <Nav>
         <NavItem to="/">홈</NavItem>
         <NavItem to="/album">앨범</NavItem>
         <NavItem to="/planner">플래너</NavItem>
         <NavItem to="/bucketlist">버킷리스트</NavItem>
-        <NavItem to="/profile">프로필</NavItem>
       </Nav>
     </>
   );

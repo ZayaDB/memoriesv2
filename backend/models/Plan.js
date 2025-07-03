@@ -3,8 +3,17 @@ const mongoose = require("mongoose");
 const planSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String },
-  date: { type: Date, required: true },
-  type: { type: String, enum: ["anniversary", "trip"], required: true },
+  startDate: { type: Date, required: true },
+  endDate: { type: Date },
+  place: { type: String },
+  type: {
+    type: String,
+    enum: ["anniversary", "trip", "date", "etc"],
+    required: true,
+  },
+  photos: [{ type: String }],
+  done: { type: Boolean, default: false },
+  review: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
 
