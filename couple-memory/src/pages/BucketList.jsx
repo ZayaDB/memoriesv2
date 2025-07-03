@@ -1,10 +1,31 @@
 import styled from "styled-components";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const API_URL =
   "https://memories-production-1440.up.railway.app/api/bucketlist";
 
+const BG = styled.div`
+  min-height: 100vh;
+  width: 100vw;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, #ffe3ef 0%, #c7eaff 100%);
+  overflow: hidden;
+`;
+const TopIcon = styled.div`
+  font-size: 2.2em;
+  margin-bottom: 0.2em;
+`;
+const MenuGuide = styled.div`
+  margin-top: 2em;
+  color: #aaa;
+  font-size: 1em;
+  text-align: center;
+  opacity: 0.8;
+`;
 const Container = styled.div`
   min-height: 80vh;
   padding: 2em 1em 70px 1em;
@@ -95,6 +116,7 @@ export default function BucketList() {
   const [items, setItems] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hearts, setHearts] = useState([]);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -105,6 +127,8 @@ export default function BucketList() {
   };
   useEffect(() => {
     fetchItems();
+    const timer = setInterval(() => popHeart(), 2200);
+    return () => clearInterval(timer);
   }, []);
 
   const handleAdd = async (e) => {
@@ -128,48 +152,81 @@ export default function BucketList() {
     fetchItems();
   };
 
+  const popHeart = () => {
+    const id = Math.random().toString(36).slice(2);
+    const x = Math.random() * 80 + 10;
+    const y = Math.random() * 60 + 20;
+    setHearts((prev) => [...prev, { id, x, y }]);
+    setTimeout(
+      () => setHearts((prev) => prev.filter((h) => h.id !== id)),
+      1200
+    );
+  };
+
   return (
-    <Container>
-      <Title>🪄 버킷리스트</Title>
-      <Guide>
-        둘이 꼭 해보고 싶은 것들을 적어보세요!
-        <br />
-        완료하면 체크하고, 사진/후기도 남길 수 있어요.
-      </Guide>
-      <AddForm onSubmit={handleAdd}>
-        <AddInput
-          type="text"
-          placeholder="예: 스카이다이빙, 노을 보며 걷기..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
-        <AddBtn type="submit" whileTap={{ scale: 1.1 }}>
-          추가
-        </AddBtn>
-      </AddForm>
-      {loading ? (
-        <div>로딩 중...</div>
-      ) : (
-        <List>
-          {items.map((item, i) => (
-            <Item
-              key={item._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
+    <>
+      <BG />
+      <Container>
+        <AnimatePresence>
+          {hearts.map((h) => (
+            <motion.div
+              key={h.id}
+              initial={{ scale: 0, opacity: 1, x: `${h.x}vw`, y: `${h.y}vh` }}
+              animate={{ scale: 1.2, opacity: 0.7, y: `${h.y - 10}vh` }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ duration: 1.2 }}
+              style={{
+                left: 0,
+                top: 0,
+                position: "fixed",
+                fontSize: "2.2em",
+                pointerEvents: "none",
+                zIndex: 99999,
+              }}
             >
-              <Check
-                type="checkbox"
-                checked={item.done}
-                onChange={() => handleCheck(item._id, item.done)}
-              />
-              <TitleText done={item.done}>{item.title}</TitleText>
-              {item.done && <DoneBadge>완료!</DoneBadge>}
-              {/* 후기/사진 업로드 버튼(추후 구현) */}
-            </Item>
+              {Math.random() > 0.5 ? "💖" : "✨"}
+            </motion.div>
           ))}
-        </List>
-      )}
-    </Container>
+        </AnimatePresence>
+        <TopIcon>🪄</TopIcon>
+        <Title>버킷리스트</Title>
+        <Guide>함께 해보고 싶은 것들을 적어보자!</Guide>
+        <AddForm onSubmit={handleAdd}>
+          <AddInput
+            type="text"
+            placeholder="예: 스카이다이빙, 노을 보며 걷기..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+          />
+          <AddBtn type="submit" whileTap={{ scale: 1.1 }}>
+            추가
+          </AddBtn>
+        </AddForm>
+        {loading ? (
+          <div>로딩 중...</div>
+        ) : (
+          <List>
+            {items.map((item, i) => (
+              <Item
+                key={item._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+              >
+                <Check
+                  type="checkbox"
+                  checked={item.done}
+                  onChange={() => handleCheck(item._id, item.done)}
+                />
+                <TitleText done={item.done}>{item.title}</TitleText>
+                {item.done && <DoneBadge>완료!</DoneBadge>}
+                {/* 후기/사진 업로드 버튼(추후 구현) */}
+              </Item>
+            ))}
+          </List>
+        )}
+        <MenuGuide>하단 메뉴에서 다른 추억도 확인해보세요!</MenuGuide>
+      </Container>
+    </>
   );
 }

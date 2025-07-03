@@ -8,6 +8,17 @@ const API_URL = "https://memories-production-1440.up.railway.app/api/photos";
 const COMMENT_URL =
   "https://memories-production-1440.up.railway.app/api/comments";
 
+const BG = styled.div`
+  min-height: 100vh;
+  width: 100vw;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, #ffe3ef 0%, #c7eaff 100%);
+  overflow: hidden;
+`;
+
 const Container = styled.div`
   min-height: 80vh;
   padding: 2em 1em 70px 1em;
@@ -176,6 +187,17 @@ const Heart = styled(motion.div)`
   pointer-events: none;
   z-index: 99999;
 `;
+const TopIcon = styled.div`
+  font-size: 2.2em;
+  margin-bottom: 0.2em;
+`;
+const MenuGuide = styled.div`
+  margin-top: 2em;
+  color: #aaa;
+  font-size: 1em;
+  text-align: center;
+  opacity: 0.8;
+`;
 
 const COMMENT_ICONS = [
   "🐻",
@@ -291,6 +313,11 @@ export default function Album() {
       .catch(() => setError("사진 목록을 불러오지 못했어요."));
   }, [loading]);
 
+  useEffect(() => {
+    const timer = setInterval(() => popHeart(), 2200);
+    return () => clearInterval(timer);
+  }, []);
+
   const popHeart = () => {
     const id = Math.random().toString(36).slice(2);
     const x = Math.random() * 80 + 10;
@@ -336,103 +363,109 @@ export default function Album() {
   const closeModal = () => setModal({ ...modal, open: false });
 
   return (
-    <Container>
-      <AnimatePresence>
-        {hearts.map((h) => (
-          <Heart
-            key={h.id}
-            initial={{ scale: 0, opacity: 1, x: `${h.x}vw`, y: `${h.y}vh` }}
-            animate={{ scale: 1.2, opacity: 0.7, y: `${h.y - 10}vh` }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.9 }}
-            style={{ left: 0, top: 0 }}
+    <>
+      <BG />
+      <Container>
+        <AnimatePresence>
+          {hearts.map((h) => (
+            <Heart
+              key={h.id}
+              initial={{ scale: 0, opacity: 1, x: `${h.x}vw`, y: `${h.y}vh` }}
+              animate={{ scale: 1.2, opacity: 0.7, y: `${h.y - 10}vh` }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ duration: 1.2 }}
+              style={{ left: 0, top: 0 }}
+            >
+              {Math.random() > 0.5 ? "💖" : "✨"}
+            </Heart>
+          ))}
+        </AnimatePresence>
+        <TopIcon>📸</TopIcon>
+        <Title>추억 앨범</Title>
+        <Guide>우리 추억을 남겨보자!</Guide>
+        <Form onSubmit={handleSubmit}>
+          <Input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => setFiles(Array.from(e.target.files))}
+          />
+          <Input
+            type="text"
+            placeholder="사진 설명(캡션)"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+          />
+          <CuteButton
+            type="submit"
+            disabled={loading}
+            whileTap={{ scale: 1.1, rotate: -5 }}
           >
-            {Math.random() > 0.5 ? "💖" : "✨"}
-          </Heart>
-        ))}
-      </AnimatePresence>
-      <Title>추억 앨범</Title>
-      <Guide>여러 장의 사진을 한 번에 올리고, 슬라이드로 볼 수 있어요!</Guide>
-      <Form onSubmit={handleSubmit}>
-        <Input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={(e) => setFiles(Array.from(e.target.files))}
-        />
-        <Input
-          type="text"
-          placeholder="사진 설명(캡션)"
-          value={caption}
-          onChange={(e) => setCaption(e.target.value)}
-        />
-        <CuteButton
-          type="submit"
-          disabled={loading}
-          whileTap={{ scale: 1.1, rotate: -5 }}
-        >
-          {loading ? "업로드 중..." : "사진 업로드 💖"}
-        </CuteButton>
-        {error && (
-          <Guide style={{ background: "#ffe3ef", color: "#ff7eb9" }}>
-            {error}
-          </Guide>
+            {loading ? "업로드 중..." : "사진 업로드 💖"}
+          </CuteButton>
+          {error && (
+            <Guide style={{ background: "#ffe3ef", color: "#ff7eb9" }}>
+              {error}
+            </Guide>
+          )}
+        </Form>
+        <PhotoList>
+          {photos.map((p, photoIdx) => (
+            <AnimatedPhotoCard
+              key={p._id}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 200 }}
+            >
+              <Swiper
+                spaceBetween={10}
+                slidesPerView={1}
+                style={{ width: "100%", borderRadius: "10px" }}
+              >
+                {p.urls.map((url, imgIdx) => (
+                  <SwiperSlide key={imgIdx}>
+                    <Img
+                      src={url}
+                      alt={p.caption}
+                      style={{ cursor: "pointer" }}
+                      onClick={() => openModal(photoIdx, imgIdx)}
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+              <Caption>{p.caption}</Caption>
+              <DateText>{formatDate(p.createdAt)}</DateText>
+              <CommentSection postId={p._id} />
+            </AnimatedPhotoCard>
+          ))}
+        </PhotoList>
+        {modal.open && (
+          <ModalOverlay onClick={closeModal}>
+            <ModalContent onClick={(e) => e.stopPropagation()}>
+              <CloseBtn onClick={closeModal}>&times;</CloseBtn>
+              <Swiper
+                initialSlide={modal.imgIdx}
+                spaceBetween={10}
+                slidesPerView={1}
+                style={{ width: "70vw", maxWidth: 500, borderRadius: "12px" }}
+              >
+                {photos[modal.photoIdx].urls.map((url, idx) => (
+                  <SwiperSlide key={idx}>
+                    <ModalImg src={url} alt="modal" />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+              <Caption style={{ marginTop: 16 }}>
+                {photos[modal.photoIdx].caption}
+              </Caption>
+              <DateText>
+                {formatDate(photos[modal.photoIdx].createdAt)}
+              </DateText>
+              <CommentSection postId={photos[modal.photoIdx]._id} />
+            </ModalContent>
+          </ModalOverlay>
         )}
-      </Form>
-      <PhotoList>
-        {photos.map((p, photoIdx) => (
-          <AnimatedPhotoCard
-            key={p._id}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 200 }}
-          >
-            <Swiper
-              spaceBetween={10}
-              slidesPerView={1}
-              style={{ width: "100%", borderRadius: "10px" }}
-            >
-              {p.urls.map((url, imgIdx) => (
-                <SwiperSlide key={imgIdx}>
-                  <Img
-                    src={url}
-                    alt={p.caption}
-                    style={{ cursor: "pointer" }}
-                    onClick={() => openModal(photoIdx, imgIdx)}
-                  />
-                </SwiperSlide>
-              ))}
-            </Swiper>
-            <Caption>{p.caption}</Caption>
-            <DateText>{formatDate(p.createdAt)}</DateText>
-            <CommentSection postId={p._id} />
-          </AnimatedPhotoCard>
-        ))}
-      </PhotoList>
-      {modal.open && (
-        <ModalOverlay onClick={closeModal}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
-            <CloseBtn onClick={closeModal}>&times;</CloseBtn>
-            <Swiper
-              initialSlide={modal.imgIdx}
-              spaceBetween={10}
-              slidesPerView={1}
-              style={{ width: "70vw", maxWidth: 500, borderRadius: "12px" }}
-            >
-              {photos[modal.photoIdx].urls.map((url, idx) => (
-                <SwiperSlide key={idx}>
-                  <ModalImg src={url} alt="modal" />
-                </SwiperSlide>
-              ))}
-            </Swiper>
-            <Caption style={{ marginTop: 16 }}>
-              {photos[modal.photoIdx].caption}
-            </Caption>
-            <DateText>{formatDate(photos[modal.photoIdx].createdAt)}</DateText>
-            <CommentSection postId={photos[modal.photoIdx]._id} />
-          </ModalContent>
-        </ModalOverlay>
-      )}
-    </Container>
+      </Container>
+    </>
   );
 }

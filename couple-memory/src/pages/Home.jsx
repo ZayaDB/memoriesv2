@@ -1,6 +1,17 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import styled from "styled-components";
+import { useState, useEffect } from "react";
 
+const BG = styled.div`
+  min-height: 100vh;
+  width: 100vw;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, #ffe3ef 0%, #c7eaff 100%);
+  overflow: hidden;
+`;
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -11,59 +22,136 @@ const Container = styled.div`
 `;
 const Names = styled(motion.h2)`
   font-family: ${({ theme }) => theme.font.cute};
-  font-size: 2.2rem;
+  font-size: 2.3rem;
   color: ${({ theme }) => theme.colors.primary};
-  margin: 0.5em 0 0.2em 0;
+  margin: 0.7em 0 0.2em 0;
   letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
 `;
 const Dday = styled(motion.div)`
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   color: #fff;
-  background: ${({ theme }) => theme.colors.primary};
-  padding: 0.5em 1.5em;
-  border-radius: 20px;
-  margin-bottom: 1em;
+  background: linear-gradient(90deg, #ffb3d1 60%, #aeefff 100%);
+  padding: 0.6em 1.7em;
+  border-radius: 22px;
+  margin-bottom: 1.2em;
   box-shadow: ${({ theme }) => theme.shadow};
+  font-family: ${({ theme }) => theme.font.cute};
 `;
-const TodayMsg = styled.div`
-  font-size: 1.1rem;
+const TodayMsg = styled(motion.div)`
+  font-size: 1.15rem;
   color: ${({ theme }) => theme.colors.primary};
   margin-top: 2em;
   text-align: center;
   background: ${({ theme }) => theme.colors.secondary};
-  border-radius: 12px;
-  padding: 1em 1.5em;
+  border-radius: 14px;
+  padding: 1.2em 1.7em;
   box-shadow: ${({ theme }) => theme.shadow};
+  min-width: 220px;
 `;
+const Character = styled(motion.div)`
+  font-size: 3.2em;
+  margin-bottom: 0.2em;
+`;
+const MenuGuide = styled.div`
+  margin-top: 2.5em;
+  color: #aaa;
+  font-size: 1em;
+  text-align: center;
+  opacity: 0.8;
+`;
+const Heart = styled(motion.div)`
+  position: fixed;
+  font-size: 2.2em;
+  pointer-events: none;
+  z-index: 99999;
+`;
+const MSGS = [
+  "오늘도 사랑해! 우리만의 추억을 쌓아가자 💖",
+  "함께라서 행복해!",
+  "오늘은 어떤 추억을 만들까?",
+  "늘 고마워, 소중해!",
+  "우리 오래오래 행복하자 🌸",
+  "사랑해, 오늘도 내일도!",
+  "너와 함께라면 어디든 좋아!",
+  "웃음 가득한 하루 보내자 😊",
+  "우리의 하루가 특별해지는 중!",
+];
 function getDday() {
   const start = new Date("2025-06-30");
   const now = new Date();
   const diff = now - start;
   return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
 }
-
 export default function Home() {
+  const [msg, setMsg] = useState(MSGS[0]);
+  const [hearts, setHearts] = useState([]);
+  useEffect(() => {
+    setMsg(MSGS[Math.floor(Math.random() * MSGS.length)]);
+    // 하트/별 파티클 효과 주기적으로
+    const timer = setInterval(() => popHeart(), 1800);
+    return () => clearInterval(timer);
+  }, []);
+  const popHeart = () => {
+    const id = Math.random().toString(36).slice(2);
+    const x = Math.random() * 80 + 10;
+    const y = Math.random() * 60 + 20;
+    setHearts((prev) => [...prev, { id, x, y }]);
+    setTimeout(
+      () => setHearts((prev) => prev.filter((h) => h.id !== id)),
+      1200
+    );
+  };
   return (
-    <Container>
-      <Names
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 200 }}
-      >
-        ZAYA & ENKHJIN
-      </Names>
-      <Dday
-        initial={{ y: 30, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-      >
-        D+{getDday()}
-      </Dday>
-      <TodayMsg>
-        오늘도 사랑해!
-        <br />
-        우리만의 추억을 쌓아가자 💖
-      </TodayMsg>
-    </Container>
+    <>
+      <BG />
+      <Container>
+        <AnimatePresence>
+          {hearts.map((h) => (
+            <Heart
+              key={h.id}
+              initial={{ scale: 0, opacity: 1, x: `${h.x}vw`, y: `${h.y}vh` }}
+              animate={{ scale: 1.2, opacity: 0.7, y: `${h.y - 10}vh` }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ duration: 1.2 }}
+              style={{ left: 0, top: 0 }}
+            >
+              {Math.random() > 0.5 ? "💖" : "✨"}
+            </Heart>
+          ))}
+        </AnimatePresence>
+        <Character
+          initial={{ y: -30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+        >
+          🐻‍❄️&nbsp;🐰
+        </Character>
+        <Names
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200 }}
+        >
+          ZAYA & ENKHJIN
+        </Names>
+        <Dday
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+        >
+          D+{getDday()}
+        </Dday>
+        <TodayMsg
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+        >
+          {msg}
+        </TodayMsg>
+        <MenuGuide>📸 앨범 | 🪄 버킷리스트 | ✈️ 플래너</MenuGuide>
+      </Container>
+    </>
   );
 }
