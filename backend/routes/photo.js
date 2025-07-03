@@ -15,33 +15,39 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// 사진 업로드
-router.post("/", upload.single("photo"), async (req, res) => {
+// 여러 사진 업로드
+router.post("/", upload.array("photos"), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ message: "파일이 필요해요!" });
-    // cloudinary 업로드
-    const result = await cloudinary.uploader.upload_stream(
-      {
-        folder: "couple-memory",
-        resource_type: "image",
-      },
-      async (error, result) => {
-        if (error)
-          return res
-            .status(500)
-            .json({ message: "Cloudinary 업로드 실패", error });
-        // DB 저장
-        const photo = new Photo({
-          url: result.secure_url,
-          uploader: req.body.uploader || "ENKHJIN & ZAYA",
-          caption: req.body.caption,
-        });
-        await photo.save();
-        res.json(photo);
-      }
-    );
-    result.end(req.file.buffer);
+    if (!req.files || req.files.length === 0)
+      return res.status(400).json({ message: "파일이 필요해요!" });
+    const urls = [];
+    // 각 파일을 Cloudinary에 업로드
+    for (const file of req.files) {
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "couple-memory",
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        stream.end(file.buffer);
+      });
+      urls.push(result.secure_url);
+    }
+    // DB 저장
+    const photo = new Photo({
+      urls,
+      uploader: req.body.uploader || "ZAYA & ENKHJIN",
+      caption: req.body.caption,
+    });
+    await photo.save();
+    res.json(photo);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "업로드 실패", error: err });
   }
 });

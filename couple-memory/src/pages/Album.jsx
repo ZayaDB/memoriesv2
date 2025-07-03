@@ -1,5 +1,7 @@
 import styled from "styled-components";
 import { useState, useEffect } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 
 const API_URL = "https://memories-production-1440.up.railway.app/api/photos";
 
@@ -54,15 +56,11 @@ const Button = styled.button`
   }
 `;
 const PhotoList = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
   width: 100%;
-  max-width: 400px;
-  @media (min-width: 600px) {
-    grid-template-columns: repeat(3, 1fr);
-    max-width: 600px;
-  }
+  max-width: 350px;
 `;
 const PhotoCard = styled.div`
   background: ${({ theme }) => theme.colors.secondary};
@@ -100,33 +98,31 @@ function formatDate(dateStr) {
 }
 
 export default function Album() {
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [caption, setCaption] = useState("");
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
-  // 사진 목록 불러오기
   useEffect(() => {
     fetch(API_URL)
       .then((res) => res.json())
       .then((data) => setPhotos(data))
       .catch(() => setError("사진 목록을 불러오지 못했어요."));
-  }, [success]);
+  }, [loading]);
 
-  // 업로드 핸들러
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
-    if (!file) {
+    if (!files.length) {
       setError("사진 파일을 선택해 주세요!");
       return;
     }
     setLoading(true);
     const formData = new FormData();
-    formData.append("photo", file);
+    for (let i = 0; i < files.length; i++) {
+      formData.append("photos", files[i]);
+    }
     formData.append("caption", caption);
     try {
       const res = await fetch(API_URL, {
@@ -134,8 +130,8 @@ export default function Album() {
         body: formData,
       });
       if (!res.ok) throw new Error("업로드 실패");
-      setSuccess("사진이 업로드됐어요!");
-      setFile(null);
+      alert("사진이 업로드됐어요!");
+      setFiles([]);
       setCaption("");
     } catch (err) {
       setError("업로드에 실패했어요. 다시 시도해 주세요.");
@@ -147,16 +143,13 @@ export default function Album() {
   return (
     <Container>
       <Title>추억 앨범</Title>
-      <Guide>
-        사진과 글을 올려서
-        <br />
-        우리만의 추억을 남겨보자!
-      </Guide>
+      <Guide>여러 장의 사진을 한 번에 올리고, 슬라이드로 볼 수 있어요!</Guide>
       <Form onSubmit={handleSubmit}>
         <Input
           type="file"
           accept="image/*"
-          onChange={(e) => setFile(e.target.files[0])}
+          multiple
+          onChange={(e) => setFiles(Array.from(e.target.files))}
         />
         <Input
           type="text"
@@ -172,16 +165,21 @@ export default function Album() {
             {error}
           </Guide>
         )}
-        {success && (
-          <Guide style={{ background: "#b2f7ef", color: "#009688" }}>
-            {success}
-          </Guide>
-        )}
       </Form>
       <PhotoList>
         {photos.map((p) => (
           <PhotoCard key={p._id}>
-            <Img src={p.url} alt={p.caption} />
+            <Swiper
+              spaceBetween={10}
+              slidesPerView={1}
+              style={{ width: "100%", borderRadius: "10px" }}
+            >
+              {p.urls.map((url, idx) => (
+                <SwiperSlide key={idx}>
+                  <Img src={url} alt={p.caption} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
             <Caption>{p.caption}</Caption>
             <DateText>{formatDate(p.createdAt)}</DateText>
           </PhotoCard>
