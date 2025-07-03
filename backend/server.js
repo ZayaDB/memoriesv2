@@ -17,7 +17,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "comeries.netlify.app", // 실제 Netlify 배포 주소로 교체
+      "https://comeries.netlify.app",
+      // 실제 Netlify 배포 주소로 교체
     ],
     credentials: true,
   })
