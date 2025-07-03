@@ -1,9 +1,12 @@
 import styled from "styled-components";
 import { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { motion, AnimatePresence } from "framer-motion";
 import "swiper/css";
 
 const API_URL = "https://memories-production-1440.up.railway.app/api/photos";
+const COMMENT_URL =
+  "https://memories-production-1440.up.railway.app/api/comments";
 
 const Container = styled.div`
   min-height: 80vh;
@@ -41,20 +44,7 @@ const Input = styled.input`
   border: 1px solid #ffe3ef;
   font-size: 1em;
 `;
-const Button = styled.button`
-  background: ${({ theme }) => theme.colors.primary};
-  color: #fff;
-  font-weight: bold;
-  border: none;
-  border-radius: 10px;
-  padding: 0.7em 1.2em;
-  font-size: 1em;
-  cursor: pointer;
-  box-shadow: ${({ theme }) => theme.shadow};
-  &:hover {
-    background: #ffb3d1;
-  }
-`;
+
 const PhotoList = styled.div`
   display: flex;
   flex-direction: column;
@@ -62,15 +52,7 @@ const PhotoList = styled.div`
   width: 100%;
   max-width: 350px;
 `;
-const PhotoCard = styled.div`
-  background: ${({ theme }) => theme.colors.secondary};
-  border-radius: 12px;
-  box-shadow: ${({ theme }) => theme.shadow};
-  padding: 0.5em;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
+
 const Img = styled.img`
   width: 100%;
   aspect-ratio: 1/1;
@@ -87,6 +69,130 @@ const DateText = styled.div`
   color: #aaa;
   font-size: 0.9em;
 `;
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+`;
+const ModalContent = styled.div`
+  background: #fff8fc;
+  border-radius: 16px;
+  padding: 1em;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+const ModalImg = styled.img`
+  max-width: 80vw;
+  max-height: 60vh;
+  border-radius: 12px;
+`;
+const CloseBtn = styled.button`
+  background: #ff7eb9;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.5em;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+`;
+const CommentBox = styled.div`
+  width: 100%;
+  margin-top: 1em;
+  background: #f7f7fa;
+  border-radius: 10px;
+  padding: 0.7em 1em;
+`;
+const CommentList = styled.div`
+  margin-bottom: 0.5em;
+`;
+const CommentItem = styled.div`
+  font-size: 0.97em;
+  color: #555;
+  margin-bottom: 0.3em;
+`;
+const CommentForm = styled.form`
+  display: flex;
+  gap: 0.5em;
+  margin-top: 0.5em;
+`;
+const CommentInput = styled.input`
+  flex: 1;
+  border-radius: 8px;
+  border: 1px solid #ffe3ef;
+  padding: 0.4em 0.7em;
+  font-size: 1em;
+`;
+const CommentBtn = styled.button`
+  background: #ff7eb9;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4em 1em;
+  font-size: 1em;
+  cursor: pointer;
+`;
+const AnimatedPhotoCard = styled(motion.div)`
+  background: ${({ theme }) => theme.colors.secondary};
+  border-radius: 12px;
+  box-shadow: ${({ theme }) => theme.shadow};
+  padding: 0.5em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 0.5em;
+`;
+const CuteButton = styled(motion.button)`
+  background: ${({ theme }) => theme.colors.primary};
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  padding: 0.7em 1.2em;
+  font-size: 1em;
+  cursor: pointer;
+  box-shadow: ${({ theme }) => theme.shadow};
+  margin-top: 0.5em;
+  &:hover {
+    background: #ffb3d1;
+  }
+`;
+const Heart = styled(motion.div)`
+  position: fixed;
+  font-size: 2.2em;
+  pointer-events: none;
+  z-index: 99999;
+`;
+
+const COMMENT_ICONS = [
+  "🐻",
+  "🐰",
+  "🐱",
+  "🐥",
+  "💬",
+  "🦊",
+  "🐧",
+  "🦄",
+  "🦋",
+  "🌸",
+];
+
+function getRandomIcon(idx) {
+  return COMMENT_ICONS[idx % COMMENT_ICONS.length];
+}
 
 function formatDate(dateStr) {
   const d = new Date(dateStr);
@@ -97,12 +203,86 @@ function formatDate(dateStr) {
   });
 }
 
+function useComments(postId) {
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const fetchComments = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${COMMENT_URL}?postId=${postId}`);
+      const data = await res.json();
+      setComments(data);
+    } catch {
+      setComments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (postId) fetchComments();
+  }, [postId]);
+  return { comments, loading, fetchComments };
+}
+
+function CommentSection({ postId }) {
+  const { comments, loading, fetchComments } = useComments(postId);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    setSending(true);
+    await fetch(COMMENT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ postId, content: input }),
+    });
+    setInput("");
+    setSending(false);
+    fetchComments();
+  };
+  return (
+    <CommentBox>
+      <CommentList>
+        {loading ? (
+          "댓글 불러오는 중..."
+        ) : comments.length === 0 ? (
+          <span style={{ color: "#bbb" }}>아직 댓글이 없어요</span>
+        ) : (
+          comments.map((c, i) => (
+            <CommentItem key={c._id}>
+              <span style={{ fontSize: "1.1em", marginRight: 6 }}>
+                {getRandomIcon(i)}
+              </span>
+              {c.content}
+            </CommentItem>
+          ))
+        )}
+      </CommentList>
+      <CommentForm onSubmit={handleSubmit}>
+        <CommentInput
+          type="text"
+          placeholder="댓글 달기..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          disabled={sending}
+        />
+        <CommentBtn type="submit" disabled={sending || !input.trim()}>
+          등록
+        </CommentBtn>
+      </CommentForm>
+    </CommentBox>
+  );
+}
+
 export default function Album() {
   const [files, setFiles] = useState([]);
   const [caption, setCaption] = useState("");
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [modal, setModal] = useState({ open: false, photoIdx: 0, imgIdx: 0 });
+  const [hearts, setHearts] = useState([]);
 
   useEffect(() => {
     fetch(API_URL)
@@ -110,6 +290,14 @@ export default function Album() {
       .then((data) => setPhotos(data))
       .catch(() => setError("사진 목록을 불러오지 못했어요."));
   }, [loading]);
+
+  const popHeart = () => {
+    const id = Math.random().toString(36).slice(2);
+    const x = Math.random() * 80 + 10;
+    const y = Math.random() * 60 + 20;
+    setHearts((prev) => [...prev, { id, x, y }]);
+    setTimeout(() => setHearts((prev) => prev.filter((h) => h.id !== id)), 900);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -133,6 +321,7 @@ export default function Album() {
       alert("사진이 업로드됐어요!");
       setFiles([]);
       setCaption("");
+      popHeart();
     } catch (err) {
       setError("업로드에 실패했어요. 다시 시도해 주세요.");
     } finally {
@@ -140,8 +329,28 @@ export default function Album() {
     }
   };
 
+  const openModal = (photoIdx, imgIdx) => {
+    setModal({ open: true, photoIdx, imgIdx });
+  };
+
+  const closeModal = () => setModal({ ...modal, open: false });
+
   return (
     <Container>
+      <AnimatePresence>
+        {hearts.map((h) => (
+          <Heart
+            key={h.id}
+            initial={{ scale: 0, opacity: 1, x: `${h.x}vw`, y: `${h.y}vh` }}
+            animate={{ scale: 1.2, opacity: 0.7, y: `${h.y - 10}vh` }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.9 }}
+            style={{ left: 0, top: 0 }}
+          >
+            {Math.random() > 0.5 ? "💖" : "✨"}
+          </Heart>
+        ))}
+      </AnimatePresence>
       <Title>추억 앨범</Title>
       <Guide>여러 장의 사진을 한 번에 올리고, 슬라이드로 볼 수 있어요!</Guide>
       <Form onSubmit={handleSubmit}>
@@ -157,9 +366,13 @@ export default function Album() {
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
         />
-        <Button type="submit" disabled={loading}>
-          {loading ? "업로드 중..." : "사진 업로드"}
-        </Button>
+        <CuteButton
+          type="submit"
+          disabled={loading}
+          whileTap={{ scale: 1.1, rotate: -5 }}
+        >
+          {loading ? "업로드 중..." : "사진 업로드 💖"}
+        </CuteButton>
         {error && (
           <Guide style={{ background: "#ffe3ef", color: "#ff7eb9" }}>
             {error}
@@ -167,24 +380,59 @@ export default function Album() {
         )}
       </Form>
       <PhotoList>
-        {photos.map((p) => (
-          <PhotoCard key={p._id}>
+        {photos.map((p, photoIdx) => (
+          <AnimatedPhotoCard
+            key={p._id}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200 }}
+          >
             <Swiper
               spaceBetween={10}
               slidesPerView={1}
               style={{ width: "100%", borderRadius: "10px" }}
             >
-              {p.urls.map((url, idx) => (
-                <SwiperSlide key={idx}>
-                  <Img src={url} alt={p.caption} />
+              {p.urls.map((url, imgIdx) => (
+                <SwiperSlide key={imgIdx}>
+                  <Img
+                    src={url}
+                    alt={p.caption}
+                    style={{ cursor: "pointer" }}
+                    onClick={() => openModal(photoIdx, imgIdx)}
+                  />
                 </SwiperSlide>
               ))}
             </Swiper>
             <Caption>{p.caption}</Caption>
             <DateText>{formatDate(p.createdAt)}</DateText>
-          </PhotoCard>
+            <CommentSection postId={p._id} />
+          </AnimatedPhotoCard>
         ))}
       </PhotoList>
+      {modal.open && (
+        <ModalOverlay onClick={closeModal}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <CloseBtn onClick={closeModal}>&times;</CloseBtn>
+            <Swiper
+              initialSlide={modal.imgIdx}
+              spaceBetween={10}
+              slidesPerView={1}
+              style={{ width: "70vw", maxWidth: 500, borderRadius: "12px" }}
+            >
+              {photos[modal.photoIdx].urls.map((url, idx) => (
+                <SwiperSlide key={idx}>
+                  <ModalImg src={url} alt="modal" />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+            <Caption style={{ marginTop: 16 }}>
+              {photos[modal.photoIdx].caption}
+            </Caption>
+            <DateText>{formatDate(photos[modal.photoIdx].createdAt)}</DateText>
+            <CommentSection postId={photos[modal.photoIdx]._id} />
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </Container>
   );
 }

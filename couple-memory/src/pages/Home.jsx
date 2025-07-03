@@ -36,7 +36,7 @@ const TodayMsg = styled.div`
   box-shadow: ${({ theme }) => theme.shadow};
 `;
 function getDday() {
-  const start = new Date("2024-06-30");
+  const start = new Date("2025-06-30");
   const now = new Date();
   const diff = now - start;
   return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
@@ -50,7 +50,7 @@ export default function Home() {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 200 }}
       >
-        ENKHJIN & ZAYA
+        ZAYA & ENKHJIN
       </Names>
       <Dday
         initial={{ y: 30, opacity: 0 }}

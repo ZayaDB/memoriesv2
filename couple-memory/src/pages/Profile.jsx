@@ -25,12 +25,12 @@ const Info = styled.div`
 export default function Profile() {
   return (
     <Container>
-      <Title>ENKHJIN & ZAYA</Title>
+      <Title>ZAYA & ENKHJIN</Title>
       <Info>
-        사귄 날: 2024년 6월 30일
+        사귄 날: 2025년 6월 30일
         <br />
         <br />
-        ENKHJIN 💖 ZAYA
+        ZAYA 💖 ENKHJIN
         <br />
         <br />
         "우리의 모든 순간이 소중해!"
