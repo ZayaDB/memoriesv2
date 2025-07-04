@@ -7,6 +7,7 @@ const postRouter = require("./routes/post");
 const commentRouter = require("./routes/comment");
 const planRouter = require("./routes/plan");
 const bucketListRouter = require("./routes/bucketlist");
+const authRouter = require("./routes/auth");
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ app.use("/api/posts", postRouter);
 app.use("/api/comments", commentRouter);
 app.use("/api/plans", planRouter);
 app.use("/api/bucketlist", bucketListRouter);
+app.use("/api/auth", authRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

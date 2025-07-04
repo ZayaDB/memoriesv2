@@ -4,6 +4,8 @@ import Home from "./pages/Home";
 import Album from "./pages/Album";
 import Planner from "./pages/Planner";
 import BucketList from "./pages/BucketList";
+import Register from "./pages/Register";
+import Login from "./pages/Login";
 
 const Nav = styled.nav`
   position: fixed;
@@ -44,12 +46,16 @@ function App() {
         <Route path="/album" element={<Album />} />
         <Route path="/planner" element={<Planner />} />
         <Route path="/bucketlist" element={<BucketList />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
       <Nav>
         <NavItem to="/">홈</NavItem>
         <NavItem to="/album">앨범</NavItem>
         <NavItem to="/planner">플래너</NavItem>
         <NavItem to="/bucketlist">버킷리스트</NavItem>
+        <NavItem to="/login">로그인</NavItem>
+        <NavItem to="/register">회원가입</NavItem>
       </Nav>
     </>
   );
