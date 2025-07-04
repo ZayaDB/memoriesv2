@@ -70,4 +70,21 @@ router.get("/me/:userId", async (req, res) => {
   }
 });
 
+// 4. 커플 정보 수정 (이름, 사귄 날짜, 기념일 등)
+router.patch("/:id", async (req, res) => {
+  try {
+    const { name, startDate, anniversary } = req.body;
+    const couple = await Couple.findByIdAndUpdate(
+      req.params.id,
+      { $set: { name, startDate, anniversary } },
+      { new: true }
+    );
+    res.json({ couple });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: "커플 정보 수정 실패", error: err.message });
+  }
+});
+
 module.exports = router;
