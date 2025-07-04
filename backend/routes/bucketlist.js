@@ -4,15 +4,18 @@ const BucketList = require("../models/BucketList");
 
 // 전체 목록 조회
 router.get("/", async (req, res) => {
-  const items = await BucketList.find().sort({ createdAt: -1 });
+  const { coupleId } = req.query;
+  if (!coupleId) return res.json([]);
+  const items = await BucketList.find({ coupleId }).sort({ createdAt: -1 });
   res.json(items);
 });
 
 // 새 항목 추가
 router.post("/", async (req, res) => {
-  const { title } = req.body;
-  if (!title) return res.status(400).json({ error: "제목 필요" });
-  const item = await BucketList.create({ title });
+  const { title, coupleId } = req.body;
+  if (!title || !coupleId)
+    return res.status(400).json({ error: "제목, 커플ID 필요" });
+  const item = await BucketList.create({ title, coupleId });
   res.json(item);
 });
 

@@ -6,6 +6,11 @@ const bucketListSchema = new mongoose.Schema({
   completedAt: { type: Date },
   photos: [{ type: String }], // Cloudinary URL 등
   review: { type: String },
+  coupleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Couple",
+    required: true,
+  },
   createdAt: { type: Date, default: Date.now },
 });
 
