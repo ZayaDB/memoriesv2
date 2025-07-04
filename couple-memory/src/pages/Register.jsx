@@ -100,51 +100,67 @@ const Guide = styled.div`
   opacity: 0.8;
 `;
 
-const Register = ({ coupleId, inviteCode, onRegister }) => {
+const Register = ({ mode, inviteCode, onRegister }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [createdCode, setCreatedCode] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
     setError("");
+    setCreatedCode("");
     try {
+      // 1. 회원가입
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, nickname }),
       });
       const data = await res.json();
-      console.log("회원가입 결과", data);
-      if (res.ok) {
-        if (inviteCode) {
-          const userId = data.user?._id || data.userId || data._id;
-          console.log("join 호출", { userId, inviteCode });
-          const joinRes = await fetch(`${API_BASE}/api/couple/join`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, inviteCode }),
-          });
-          const joinData = await joinRes.json();
-          console.log("join 응답", joinData);
-          if (!joinRes.ok) {
-            setError(joinData.message || "커플방 입장에 실패했습니다.");
-            setLoading(false);
-            return;
-          }
-        }
-        setMessage("회원가입이 완료되었습니다! 로그인 해주세요.");
-        setEmail("");
-        setPassword("");
-        setNickname("");
-        if (onRegister) onRegister();
-      } else {
+      if (!res.ok) {
         setError(data.message || "회원가입에 실패했습니다.");
+        setLoading(false);
+        return;
+      }
+      // 2. 회원가입 성공 후 커플방 생성/입장
+      const userId = data.userId || data._id || data.id || data.user?._id; // 백엔드 응답에 따라 조정
+      if (mode === "create") {
+        // 커플방 생성
+        const cRes = await fetch(`${API_BASE}/api/couple/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId }),
+        });
+        const cData = await cRes.json();
+        if (cRes.ok) {
+          setCreatedCode(cData.inviteCode);
+          setMessage(
+            "커플방이 생성되었습니다! 아래 초대코드를 상대방에게 전달하세요."
+          );
+          if (onRegister) setTimeout(onRegister, 2000); // 2초 후 로그인 이동
+        } else {
+          setError(cData.message || "커플방 생성에 실패했습니다.");
+        }
+      } else if (mode === "join") {
+        // 커플방 입장
+        const jRes = await fetch(`${API_BASE}/api/couple/join`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, inviteCode }),
+        });
+        const jData = await jRes.json();
+        if (jRes.ok) {
+          setMessage("커플방에 입장했습니다! 로그인 해주세요.");
+          if (onRegister) setTimeout(onRegister, 1500);
+        } else {
+          setError(jData.message || "커플방 입장에 실패했습니다.");
+        }
       }
     } catch (err) {
       setError("서버 오류가 발생했습니다.");
@@ -163,11 +179,18 @@ const Register = ({ coupleId, inviteCode, onRegister }) => {
           </span>
           <Title>커플 추억앱</Title>
           <Sub>함께 시작해볼까요?</Sub>
-          {inviteCode && (
+          {mode === "create" && createdCode && (
             <div
               style={{ color: "#ff7eb9", marginBottom: 12, fontWeight: 500 }}
             >
-              내 초대코드: <b>{inviteCode}</b>
+              내 초대코드: <b>{createdCode}</b>
+            </div>
+          )}
+          {mode === "join" && inviteCode && (
+            <div
+              style={{ color: "#ff7eb9", marginBottom: 12, fontWeight: 500 }}
+            >
+              초대코드: <b>{inviteCode}</b>
             </div>
           )}
           <div style={{ fontSize: "2em", marginBottom: "1em" }}>💗</div>

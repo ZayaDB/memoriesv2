@@ -109,49 +109,14 @@ const OptionBtn = styled(Button)`
   }
 `;
 
-export default function InvitePage({ userId, onSuccess }) {
+export default function InvitePage({ onSuccess }) {
   const [mode, setMode] = useState(null); // "join" or "create"
   const [inviteCode, setInviteCode] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [createdCode, setCreatedCode] = useState("");
 
-  const handleJoin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setMessage("");
-    setTimeout(() => {
-      setLoading(false);
-      if (onSuccess) onSuccess({ inviteCode });
-    }, 500);
-  };
-
-  const handleCreate = async () => {
-    setLoading(true);
-    setError("");
-    setMessage("");
-    try {
-      const res = await fetch(`${API_BASE}/api/couple/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage("새 커플방이 생성되었습니다!");
-        setCreatedCode(data.inviteCode);
-        if (onSuccess)
-          onSuccess({ coupleId: data.coupleId, inviteCode: data.inviteCode });
-      } else {
-        setError(data.message || "생성에 실패했습니다.");
-      }
-    } catch (err) {
-      setError("서버 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
+  const handleNext = () => {
+    if (mode === "join" && !inviteCode) return;
+    if (onSuccess)
+      onSuccess({ mode, inviteCode: inviteCode.trim().toUpperCase() });
   };
 
   return (
@@ -167,11 +132,18 @@ export default function InvitePage({ userId, onSuccess }) {
               <OptionBtn onClick={() => setMode("join")}>
                 초대코드로 입장
               </OptionBtn>
-              <OptionBtn onClick={handleCreate}>새 커플방 만들기</OptionBtn>
+              <OptionBtn onClick={() => setMode("create")}>
+                새 커플방 만들기
+              </OptionBtn>
             </>
           )}
           {mode === "join" && (
-            <Form onSubmit={handleJoin}>
+            <Form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleNext();
+              }}
+            >
               <Input
                 type="text"
                 placeholder="초대코드를 입력하세요"
@@ -181,36 +153,21 @@ export default function InvitePage({ userId, onSuccess }) {
                 maxLength={8}
                 autoFocus
               />
-              <Button type="submit" disabled={loading}>
-                {loading ? "입장 중..." : "입장하기"}
-              </Button>
+              <Button type="submit">다음</Button>
               <OptionBtn type="button" onClick={() => setMode(null)}>
                 돌아가기
               </OptionBtn>
             </Form>
           )}
-          {createdCode && (
-            <div
-              style={{ marginTop: 18, color: "#ff7eb9", textAlign: "center" }}
-            >
-              내 초대코드: <b>{createdCode}</b>
-              <br />
-              상대방에게 이 코드를 알려주세요!
-            </div>
-          )}
-          {message && (
-            <div
-              style={{ marginTop: 18, color: "#1db954", textAlign: "center" }}
-            >
-              {message}
-            </div>
-          )}
-          {error && (
-            <div
-              style={{ marginTop: 18, color: "#ff4d4f", textAlign: "center" }}
-            >
-              {error}
-            </div>
+          {mode === "create" && (
+            <>
+              <Button style={{ marginTop: 24 }} onClick={handleNext}>
+                회원가입 하러 가기
+              </Button>
+              <OptionBtn type="button" onClick={() => setMode(null)}>
+                돌아가기
+              </OptionBtn>
+            </>
           )}
         </Card>
       </Center>

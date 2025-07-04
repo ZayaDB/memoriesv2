@@ -65,9 +65,9 @@ function App() {
   }, []);
 
   // InvitePage에서 초대코드 입력/생성 완료 시
-  function handleInviteSuccess({ coupleId, inviteCode }) {
-    setOnboarding({ coupleId, inviteCode, step: "register" });
-    setOnboardingState({ coupleId, inviteCode, step: "register" });
+  function handleInviteSuccess({ mode, inviteCode }) {
+    setOnboarding({ mode, inviteCode, step: "register" });
+    setOnboardingState({ mode, inviteCode, step: "register" });
     navigate("/register");
   }
 
@@ -106,7 +106,7 @@ function App() {
     // 2. 회원가입만 노출 (커플방 정보 props로 전달)
     return (
       <Register
-        coupleId={onboarding.coupleId}
+        mode={onboarding.mode}
         inviteCode={onboarding.inviteCode}
         onRegister={handleRegisterSuccess}
       />
