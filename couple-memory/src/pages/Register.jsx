@@ -100,7 +100,7 @@ const Guide = styled.div`
   opacity: 0.8;
 `;
 
-const Register = () => {
+const Register = ({ coupleId, inviteCode, onRegister }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nickname, setNickname] = useState("");
@@ -117,7 +117,7 @@ const Register = () => {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, nickname }),
+        body: JSON.stringify({ email, password, nickname, coupleId }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -125,6 +125,7 @@ const Register = () => {
         setEmail("");
         setPassword("");
         setNickname("");
+        if (onRegister) onRegister();
       } else {
         setError(data.message || "회원가입에 실패했습니다.");
       }
@@ -145,6 +146,13 @@ const Register = () => {
           </span>
           <Title>커플 추억앱</Title>
           <Sub>함께 시작해볼까요?</Sub>
+          {inviteCode && (
+            <div
+              style={{ color: "#ff7eb9", marginBottom: 12, fontWeight: 500 }}
+            >
+              내 초대코드: <b>{inviteCode}</b>
+            </div>
+          )}
           <div style={{ fontSize: "2em", marginBottom: "1em" }}>💗</div>
           <h2
             style={{
