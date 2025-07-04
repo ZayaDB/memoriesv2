@@ -129,7 +129,15 @@ const Register = ({ mode, inviteCode, onRegister }) => {
         return;
       }
       // 2. 회원가입 성공 후 커플방 생성/입장
-      const userId = data.userId || data._id || data.id || data.user?._id; // 백엔드 응답에 따라 조정
+      const userId =
+        data.userId || data._id || data.id || (data.user && data.user._id);
+      if (!userId) {
+        setError(
+          "회원가입 후 userId를 찾을 수 없습니다. 관리자에게 문의하세요."
+        );
+        setLoading(false);
+        return;
+      }
       if (mode === "create") {
         // 커플방 생성
         const cRes = await fetch(`${API_BASE}/api/couple/create`, {
