@@ -305,6 +305,8 @@ export default function Album() {
   const [error, setError] = useState("");
   const [modal, setModal] = useState({ open: false, photoIdx: 0, imgIdx: 0 });
   const [hearts, setHearts] = useState([]);
+  const [editIdx, setEditIdx] = useState(-1);
+  const [editCaption, setEditCaption] = useState("");
 
   // 로그인한 유저의 coupleId 추출
   const coupleId = (() => {
@@ -350,6 +352,7 @@ export default function Album() {
       formData.append("photos", files[i]);
     }
     formData.append("caption", caption);
+    formData.append("coupleId", coupleId);
     try {
       const res = await fetch(API_URL, {
         method: "POST",
@@ -444,7 +447,77 @@ export default function Album() {
                   </SwiperSlide>
                 ))}
               </Swiper>
-              <Caption>{p.caption}</Caption>
+              {editIdx === photoIdx ? (
+                <div style={{ width: "100%", margin: "0.5em 0" }}>
+                  <Input
+                    type="text"
+                    value={editCaption}
+                    onChange={(e) => setEditCaption(e.target.value)}
+                    style={{ marginBottom: 8 }}
+                  />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <CuteButton
+                      type="button"
+                      onClick={async () => {
+                        if (!editCaption.trim()) return;
+                        await fetch(API_URL + "/" + p._id, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ caption: editCaption }),
+                        });
+                        setEditIdx(-1);
+                        setEditCaption("");
+                        setLoading((l) => !l);
+                      }}
+                      whileTap={{ scale: 1.1 }}
+                    >
+                      저장
+                    </CuteButton>
+                    <CuteButton
+                      type="button"
+                      style={{ background: "#bbb" }}
+                      onClick={() => {
+                        setEditIdx(-1);
+                        setEditCaption("");
+                      }}
+                      whileTap={{ scale: 1.1 }}
+                    >
+                      취소
+                    </CuteButton>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Caption>{p.caption}</Caption>
+                  <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                    <CuteButton
+                      type="button"
+                      style={{ background: "#ffb3d1", color: "#fff" }}
+                      onClick={() => {
+                        setEditIdx(photoIdx);
+                        setEditCaption(p.caption || "");
+                      }}
+                      whileTap={{ scale: 1.1 }}
+                    >
+                      수정
+                    </CuteButton>
+                    <CuteButton
+                      type="button"
+                      style={{ background: "#bbb" }}
+                      onClick={async () => {
+                        if (!window.confirm("정말 삭제할까요?")) return;
+                        await fetch(API_URL + "/" + p._id, {
+                          method: "DELETE",
+                        });
+                        setLoading((l) => !l);
+                      }}
+                      whileTap={{ scale: 1.1 }}
+                    >
+                      삭제
+                    </CuteButton>
+                  </div>
+                </>
+              )}
               <DateText>{formatDate(p.createdAt)}</DateText>
               <CommentSection postId={p._id} />
             </AnimatedPhotoCard>
