@@ -111,22 +111,6 @@ function App() {
           <NavItem to="/album">앨범</NavItem>
           <NavItem to="/planner">플래너</NavItem>
           <NavItem to="/bucketlist">버킷리스트</NavItem>
-          <NavItem
-            as="button"
-            onClick={() => {
-              setUser(null);
-              setOnboarding({ step: "invite" });
-              localStorage.removeItem("user");
-            }}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#ff7eb9",
-              cursor: "pointer",
-            }}
-          >
-            로그아웃
-          </NavItem>
         </Nav>
       </>
     );

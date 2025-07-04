@@ -71,11 +71,11 @@ const Heart = styled(motion.div)`
 `;
 const SettingsIcon = styled.button`
   position: absolute;
-  top: 24px;
-  right: 24px;
+  bottom: 60px;
+  right: 0;
   background: none;
   border: none;
-  font-size: 2em;
+  font-size: 1.5rem;
   color: #ff7eb9;
   cursor: pointer;
   z-index: 10;
@@ -95,23 +95,30 @@ const MSGS = [
   "웃음 가득한 하루 보내자 😊",
   "우리의 하루가 특별해지는 중!",
 ];
-function getDday() {
-  const start = new Date("2025-06-30");
-  const now = new Date();
-  const diff = now - start;
-  return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
-}
+const API_BASE = "https://memories-production-1440.up.railway.app";
+
 export default function Home({ user, coupleId }) {
   const [msg, setMsg] = useState(MSGS[0]);
   const [hearts, setHearts] = useState([]);
+  const [couple, setCouple] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     setMsg(MSGS[Math.floor(Math.random() * MSGS.length)]);
-    // 하트/별 파티클 효과 주기적으로
     const timer = setInterval(() => popHeart(), 1800);
     return () => clearInterval(timer);
   }, []);
+
+  // 커플 정보 fetch (설정에서 수정하면 홈에도 반영)
+  useEffect(() => {
+    if (!coupleId) return;
+    fetch(`${API_BASE}/api/couple/${coupleId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setCouple(data.couple);
+        console.log("커플 정보:", data.couple);
+      });
+  }, [coupleId]);
 
   const popHeart = () => {
     const id = Math.random().toString(36).slice(2);
@@ -124,8 +131,18 @@ export default function Home({ user, coupleId }) {
     );
   };
 
-  // 커플 이름: 닉네임 기반(임시)
-  const coupleName = user ? user.nickname : "";
+  // 커플 이름: 커플 정보의 name만 사용
+  const coupleName = couple?.name || "";
+  // 사귄 날짜: 커플 정보의 startDate
+  const startDate = couple?.startDate;
+  // D-day 계산
+  function getDday() {
+    if (!startDate) return "-";
+    const start = new Date(startDate);
+    const now = new Date();
+    const diff = now - start;
+    return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+  }
 
   return (
     <>
@@ -169,7 +186,7 @@ export default function Home({ user, coupleId }) {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
         >
-          {/* D+{getDday()} */}
+          D+{getDday()}
         </Dday>
         <TodayMsg
           initial={{ scale: 0.8, opacity: 0 }}

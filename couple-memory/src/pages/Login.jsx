@@ -124,7 +124,7 @@ const Login = ({ coupleId, onLogin }) => {
         setMessage("로그인 성공! 환영합니다.");
         setEmail("");
         setPassword("");
-        if (onLogin) onLogin({ email, token: data.token, coupleId });
+        if (onLogin) onLogin({ ...data.user, token: data.token });
       } else {
         setError(data.message || "로그인에 실패했습니다.");
       }

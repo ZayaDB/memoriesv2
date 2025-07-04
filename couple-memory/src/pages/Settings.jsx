@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE = "https://memories-production-1440.up.railway.app";
 
@@ -96,6 +97,7 @@ export default function Settings({ coupleId, onSave }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log("Settings coupleId:", coupleId);
@@ -192,6 +194,32 @@ export default function Settings({ coupleId, onSave }) {
           )}
         </Card>
       </Center>
+      <div
+        style={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          marginTop: 32,
+        }}
+      >
+        <button
+          onClick={() => {
+            localStorage.removeItem("user");
+            navigate(0); // 새로고침으로 온보딩 단계로 이동
+          }}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#ff4d4f",
+            fontWeight: 700,
+            fontSize: "1.1em",
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+        >
+          로그아웃
+        </button>
+      </div>
     </>
   );
 }
