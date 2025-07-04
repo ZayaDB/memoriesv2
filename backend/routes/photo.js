@@ -54,7 +54,10 @@ router.post("/", upload.array("photos"), async (req, res) => {
 
 // 사진 목록 (최신순)
 router.get("/", async (req, res) => {
-  const photos = await Photo.find().sort({ createdAt: -1 });
+  const { coupleId } = req.query;
+  let query = {};
+  if (coupleId) query.coupleId = coupleId;
+  const photos = await Photo.find(query).sort({ createdAt: -1 });
   res.json(photos);
 });
 

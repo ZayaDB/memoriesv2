@@ -5,11 +5,12 @@ const router = express.Router();
 // 일정 추가
 router.post("/", async (req, res) => {
   try {
-    const { title, description, startDate, endDate, place, type } = req.body;
-    if (!title || !startDate || !type)
+    const { title, description, startDate, endDate, place, type, coupleId } =
+      req.body;
+    if (!title || !startDate || !type || !coupleId)
       return res
         .status(400)
-        .json({ message: "제목, 시작일, 타입이 필요해요!" });
+        .json({ message: "제목, 시작일, 타입, 커플ID가 필요해요!" });
     const plan = new Plan({
       title,
       description,
@@ -17,6 +18,7 @@ router.post("/", async (req, res) => {
       endDate,
       place,
       type,
+      coupleId,
     });
     await plan.save();
     res.json(plan);
@@ -27,7 +29,9 @@ router.post("/", async (req, res) => {
 
 // 일정 목록 (최신순)
 router.get("/", async (req, res) => {
-  const plans = await Plan.find().sort({ startDate: 1 });
+  const { coupleId } = req.query;
+  if (!coupleId) return res.json([]);
+  const plans = await Plan.find({ coupleId }).sort({ startDate: 1 });
   res.json(plans);
 });
 

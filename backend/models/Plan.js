@@ -14,6 +14,11 @@ const planSchema = new mongoose.Schema({
   photos: [{ type: String }],
   done: { type: Boolean, default: false },
   review: { type: String },
+  coupleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Couple",
+    required: true,
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -306,12 +306,23 @@ export default function Album() {
   const [modal, setModal] = useState({ open: false, photoIdx: 0, imgIdx: 0 });
   const [hearts, setHearts] = useState([]);
 
+  // 로그인한 유저의 coupleId 추출
+  const coupleId = (() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      return user?.coupleId;
+    } catch {
+      return null;
+    }
+  })();
+
   useEffect(() => {
-    fetch(API_URL)
+    if (!coupleId) return;
+    fetch(`${API_URL}?coupleId=${coupleId}`)
       .then((res) => res.json())
       .then((data) => setPhotos(data))
       .catch(() => setError("사진 목록을 불러오지 못했어요."));
-  }, [loading]);
+  }, [loading, coupleId]);
 
   useEffect(() => {
     const timer = setInterval(() => popHeart(), 2200);

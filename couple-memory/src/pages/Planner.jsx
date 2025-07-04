@@ -137,9 +137,20 @@ export default function Planner() {
   const [loading, setLoading] = useState(false);
   const [hearts, setHearts] = useState([]);
 
+  // 로그인한 유저의 coupleId 추출
+  const coupleId = (() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      return user?.coupleId;
+    } catch {
+      return null;
+    }
+  })();
+
   const fetchPlans = async () => {
     setLoading(true);
-    const res = await fetch(API_URL);
+    if (!coupleId) return setLoading(false);
+    const res = await fetch(`${API_URL}?coupleId=${coupleId}`);
     const data = await res.json();
     setPlans(data);
     setLoading(false);
@@ -148,7 +159,7 @@ export default function Planner() {
     fetchPlans();
     const timer = setInterval(() => popHeart(), 2200);
     return () => clearInterval(timer);
-  }, []);
+  }, [coupleId]);
 
   const handleChange = (e) => {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -160,7 +171,7 @@ export default function Planner() {
     await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, coupleId }),
     });
     setForm({
       title: "",

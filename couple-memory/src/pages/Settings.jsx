@@ -168,13 +168,36 @@ export default function Settings({ coupleId, onSave }) {
               onChange={handleChange}
               required
             />
+            <label
+              style={{
+                color: "#ff7eb9",
+                fontWeight: 500,
+                marginBottom: 4,
+                marginTop: 8,
+                fontSize: "1em",
+              }}
+            >
+              사귄 날짜
+            </label>
             <Input
               type="date"
               name="startDate"
-              placeholder="사귄 날짜"
+              placeholder="사귄 날짜 (필수)"
               value={form.startDate}
               onChange={handleChange}
+              required
             />
+            <label
+              style={{
+                color: "#bdbdbd",
+                fontWeight: 400,
+                marginBottom: 4,
+                marginTop: 8,
+                fontSize: "0.95em",
+              }}
+            >
+              기념일 (선택)
+            </label>
             <Input
               type="date"
               name="anniversary"
