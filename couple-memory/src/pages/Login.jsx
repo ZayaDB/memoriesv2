@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+const API_BASE = "https://memories-production-1440.up.railway.app";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,7 +15,7 @@ const Login = () => {
     setError("");
     setMessage("");
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

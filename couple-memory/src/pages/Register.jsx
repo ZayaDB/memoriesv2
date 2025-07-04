@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+const API_BASE = "https://memories-production-1440.up.railway.app";
+
 const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,7 +16,7 @@ const Register = () => {
     setMessage("");
     setError("");
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, nickname }),
