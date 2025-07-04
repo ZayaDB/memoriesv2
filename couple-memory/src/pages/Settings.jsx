@@ -187,24 +187,7 @@ export default function Settings({ coupleId, onSave }) {
               onChange={handleChange}
               required
             />
-            <label
-              style={{
-                color: "#bdbdbd",
-                fontWeight: 400,
-                marginBottom: 4,
-                marginTop: 8,
-                fontSize: "0.95em",
-              }}
-            >
-              기념일 (선택)
-            </label>
-            <Input
-              type="date"
-              name="anniversary"
-              placeholder="기념일"
-              value={form.anniversary}
-              onChange={handleChange}
-            />
+
             <Button type="submit" disabled={loading || !coupleId}>
               {loading ? "저장 중..." : "저장하기"}
             </Button>
@@ -223,6 +206,12 @@ export default function Settings({ coupleId, onSave }) {
           display: "flex",
           justifyContent: "center",
           marginTop: 32,
+          position: "fixed",
+          top: "80%",
+          left: 0,
+          right: 0,
+          padding: "20px 0",
+          backdropFilter: "blur(10px)",
         }}
       >
         <button

@@ -118,9 +118,20 @@ export default function BucketList() {
   const [loading, setLoading] = useState(false);
   const [hearts, setHearts] = useState([]);
 
+  // 로그인한 유저의 coupleId 추출
+  const coupleId = (() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+      return user?.coupleId;
+    } catch {
+      return null;
+    }
+  })();
+
   const fetchItems = async () => {
     setLoading(true);
-    const res = await fetch(API_URL);
+    if (!coupleId) return setLoading(false);
+    const res = await fetch(API_URL + "?coupleId=" + coupleId);
     const data = await res.json();
     setItems(data);
     setLoading(false);
@@ -129,15 +140,15 @@ export default function BucketList() {
     fetchItems();
     const timer = setInterval(() => popHeart(), 2200);
     return () => clearInterval(timer);
-  }, []);
+  }, [coupleId]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || !coupleId) return;
     await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: input }),
+      body: JSON.stringify({ title: input, coupleId }),
     });
     setInput("");
     fetchItems();

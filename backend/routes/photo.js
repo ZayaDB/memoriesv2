@@ -20,6 +20,8 @@ router.post("/", upload.array("photos"), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0)
       return res.status(400).json({ message: "파일이 필요해요!" });
+    const { coupleId } = req.body;
+    if (!coupleId) return res.status(400).json({ message: "커플ID 필요" });
     const urls = [];
     // 각 파일을 Cloudinary에 업로드
     for (const file of req.files) {
@@ -43,6 +45,7 @@ router.post("/", upload.array("photos"), async (req, res) => {
       urls,
       uploader: req.body.uploader || "ZAYA & ENKHJIN",
       caption: req.body.caption,
+      coupleId,
     });
     await photo.save();
     res.json(photo);
