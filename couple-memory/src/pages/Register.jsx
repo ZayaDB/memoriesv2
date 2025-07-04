@@ -117,10 +117,27 @@ const Register = ({ coupleId, inviteCode, onRegister }) => {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, nickname, coupleId }),
+        body: JSON.stringify({ email, password, nickname }),
       });
       const data = await res.json();
+      console.log("회원가입 결과", data);
       if (res.ok) {
+        if (inviteCode) {
+          const userId = data.user?._id || data.userId || data._id;
+          console.log("join 호출", { userId, inviteCode });
+          const joinRes = await fetch(`${API_BASE}/api/couple/join`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, inviteCode }),
+          });
+          const joinData = await joinRes.json();
+          console.log("join 응답", joinData);
+          if (!joinRes.ok) {
+            setError(joinData.message || "커플방 입장에 실패했습니다.");
+            setLoading(false);
+            return;
+          }
+        }
         setMessage("회원가입이 완료되었습니다! 로그인 해주세요.");
         setEmail("");
         setPassword("");

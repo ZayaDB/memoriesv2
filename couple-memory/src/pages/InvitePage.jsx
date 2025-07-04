@@ -122,25 +122,10 @@ export default function InvitePage({ userId, onSuccess }) {
     setLoading(true);
     setError("");
     setMessage("");
-    try {
-      const res = await fetch(`${API_BASE}/api/couple/join`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, inviteCode }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setMessage("커플방에 입장했어요!");
-        setCreatedCode("");
-        if (onSuccess) onSuccess({ coupleId: data.coupleId, inviteCode });
-      } else {
-        setError(data.message || "입장에 실패했습니다.");
-      }
-    } catch (err) {
-      setError("서버 오류가 발생했습니다.");
-    } finally {
+    setTimeout(() => {
       setLoading(false);
-    }
+      if (onSuccess) onSuccess({ inviteCode });
+    }, 500);
   };
 
   const handleCreate = async () => {
