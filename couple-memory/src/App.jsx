@@ -1,6 +1,6 @@
 import { Routes, Route, NavLink } from "react-router-dom";
 import styled from "styled-components";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Home from "./pages/Home";
 import Album from "./pages/Album";
 import Planner from "./pages/Planner";
@@ -8,6 +8,8 @@ import BucketList from "./pages/BucketList";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import InvitePage from "./pages/InvitePage";
+import Settings from "./pages/Settings";
+import { useNavigate } from "react-router-dom";
 
 const Nav = styled.nav`
   position: fixed;
@@ -43,6 +45,16 @@ const NavItem = styled(NavLink)`
 function App() {
   const [onboarding, setOnboarding] = useState({ step: "invite" });
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  // 앱 시작 시 localStorage에서 user 불러오기
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+      setOnboarding({ step: "done" });
+    }
+  }, []);
 
   // InvitePage에서 초대코드 입력/생성 완료 시
   function handleInviteSuccess({ mode, inviteCode }) {
@@ -58,6 +70,7 @@ function App() {
   function handleLoginSuccess(userObj) {
     setUser(userObj);
     setOnboarding({ step: "done" });
+    localStorage.setItem("user", JSON.stringify(userObj));
   }
 
   // 온보딩 플로우 분기
@@ -81,10 +94,17 @@ function App() {
     return (
       <>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={<Home user={user} coupleId={user.coupleId} />}
+          />
           <Route path="/album" element={<Album />} />
           <Route path="/planner" element={<Planner />} />
           <Route path="/bucketlist" element={<BucketList />} />
+          <Route
+            path="/settings"
+            element={<Settings coupleId={user.coupleId} onSave />}
+          />
         </Routes>
         <Nav>
           <NavItem to="/">홈</NavItem>
@@ -96,6 +116,7 @@ function App() {
             onClick={() => {
               setUser(null);
               setOnboarding({ step: "invite" });
+              localStorage.removeItem("user");
             }}
             style={{
               background: "none",

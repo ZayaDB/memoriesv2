@@ -252,16 +252,17 @@ const Register = ({ mode, inviteCode, onRegister }) => {
             }}
           >
             <span style={{ color: "#ffb3d1" }}>이미 회원이신가요?</span>
-            <Link
-              to="/login"
+            <span
+              onClick={() => onRegister && onRegister("login")}
               style={{
                 color: "#ff7eb9",
                 fontWeight: 700,
                 textDecoration: "underline",
+                cursor: "pointer",
               }}
             >
               로그인
-            </Link>
+            </span>
           </div>
           {message && (
             <div

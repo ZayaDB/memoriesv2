@@ -21,7 +21,16 @@ router.post("/register", async (req, res) => {
     const user = new User({ email, password: hashedPassword, nickname });
     await user.save();
 
-    res.status(201).json({ message: "회원가입 성공!", userId: user._id });
+    res.status(201).json({
+      message: "회원가입 성공!",
+      userId: user._id,
+      user: {
+        email: user.email,
+        nickname: user.nickname,
+        coupleId: user.coupleId,
+        _id: user._id,
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: "서버 오류", error: err.message });
   }
@@ -48,7 +57,15 @@ router.post("/login", async (req, res) => {
       expiresIn: "7d",
     });
 
-    res.json({ token, user: { email: user.email, nickname: user.nickname } });
+    res.json({
+      token,
+      user: {
+        email: user.email,
+        nickname: user.nickname,
+        coupleId: user.coupleId,
+        _id: user._id,
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: "서버 오류", error: err.message });
   }

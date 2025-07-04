@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import styled from "styled-components";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const BG = styled.div`
   min-height: 100vh;
@@ -68,6 +69,21 @@ const Heart = styled(motion.div)`
   pointer-events: none;
   z-index: 99999;
 `;
+const SettingsIcon = styled.button`
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: none;
+  border: none;
+  font-size: 2em;
+  color: #ff7eb9;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s;
+  &:hover {
+    color: #ff4d4f;
+  }
+`;
 const MSGS = [
   "오늘도 사랑해! 우리만의 추억을 쌓아가자 💖",
   "함께라서 행복해!",
@@ -85,15 +101,18 @@ function getDday() {
   const diff = now - start;
   return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
 }
-export default function Home() {
+export default function Home({ user, coupleId }) {
   const [msg, setMsg] = useState(MSGS[0]);
   const [hearts, setHearts] = useState([]);
+  const navigate = useNavigate();
+
   useEffect(() => {
     setMsg(MSGS[Math.floor(Math.random() * MSGS.length)]);
     // 하트/별 파티클 효과 주기적으로
     const timer = setInterval(() => popHeart(), 1800);
     return () => clearInterval(timer);
   }, []);
+
   const popHeart = () => {
     const id = Math.random().toString(36).slice(2);
     const x = Math.random() * 80 + 10;
@@ -104,9 +123,18 @@ export default function Home() {
       1200
     );
   };
+
+  // 커플 이름: 닉네임 기반(임시)
+  const coupleName = user ? user.nickname : "";
+
   return (
     <>
       <BG />
+      <SettingsIcon onClick={() => navigate("/settings")} title="설정">
+        <span role="img" aria-label="설정">
+          ⚙️
+        </span>
+      </SettingsIcon>
       <Container>
         <AnimatePresence>
           {hearts.map((h) => (
@@ -134,14 +162,14 @@ export default function Home() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
         >
-          ZAYA & ENKHJIN
+          {coupleName}
         </Names>
         <Dday
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
         >
-          D+{getDday()}
+          {/* D+{getDday()} */}
         </Dday>
         <TodayMsg
           initial={{ scale: 0.8, opacity: 0 }}
