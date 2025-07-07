@@ -508,6 +508,8 @@ export default function Album() {
                         if (!window.confirm("정말 삭제할까요?")) return;
                         await fetch(API_URL + "/" + p._id, {
                           method: "DELETE",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ coupleId }),
                         });
                         setLoading((l) => !l);
                       }}

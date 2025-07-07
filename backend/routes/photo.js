@@ -64,4 +64,30 @@ router.get("/", async (req, res) => {
   res.json(photos);
 });
 
+// 사진 정보 수정 (캡션 등)
+router.patch("/:id", async (req, res) => {
+  const { caption, coupleId } = req.body;
+  const update = {};
+  if (caption !== undefined) update.caption = caption;
+  // coupleId도 같이 체크
+  const photo = await Photo.findOneAndUpdate(
+    { _id: req.params.id, coupleId },
+    update,
+    { new: true }
+  );
+  if (!photo)
+    return res.status(404).json({ message: "사진을 찾을 수 없습니다." });
+  res.json(photo);
+});
+
+// 사진 삭제
+router.delete("/:id", async (req, res) => {
+  const { coupleId } = req.body;
+  // coupleId도 같이 체크
+  const photo = await Photo.findOneAndDelete({ _id: req.params.id, coupleId });
+  if (!photo)
+    return res.status(404).json({ message: "사진을 찾을 수 없습니다." });
+  res.json({ ok: true });
+});
+
 module.exports = router;
