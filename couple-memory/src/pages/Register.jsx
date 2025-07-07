@@ -151,7 +151,6 @@ const Register = ({ mode, inviteCode, onRegister }) => {
           setMessage(
             "커플방이 생성되었습니다! 아래 초대코드를 상대방에게 전달하세요."
           );
-          if (onRegister) setTimeout(onRegister, 2000); // 2초 후 로그인 이동
         } else {
           setError(cData.message || "커플방 생성에 실패했습니다.");
         }
@@ -189,9 +188,54 @@ const Register = ({ mode, inviteCode, onRegister }) => {
           <Sub>함께 시작해볼까요?</Sub>
           {mode === "create" && createdCode && (
             <div
-              style={{ color: "#ff7eb9", marginBottom: 12, fontWeight: 500 }}
+              style={{
+                color: "#ff7eb9",
+                marginBottom: 12,
+                fontWeight: 500,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 8,
+              }}
             >
-              내 초대코드: <b>{createdCode}</b>
+              <div style={{ fontSize: 18, marginBottom: 4 }}>
+                내 초대코드: <b>{createdCode}</b>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  style={{
+                    background: "#ffb3d1",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "0.4em 1em",
+                    cursor: "pointer",
+                    fontWeight: 500,
+                  }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(createdCode);
+                    setMessage("초대코드가 복사되었습니다!");
+                  }}
+                >
+                  복사
+                </button>
+                <button
+                  style={{
+                    background: "#bbb",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "0.4em 1em",
+                    cursor: "pointer",
+                    fontWeight: 500,
+                  }}
+                  onClick={() => {
+                    if (onRegister) onRegister();
+                  }}
+                >
+                  확인
+                </button>
+              </div>
             </div>
           )}
           {mode === "join" && inviteCode && (

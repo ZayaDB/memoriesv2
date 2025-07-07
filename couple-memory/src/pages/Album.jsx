@@ -463,7 +463,10 @@ export default function Album() {
                         await fetch(API_URL + "/" + p._id, {
                           method: "PATCH",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ caption: editCaption }),
+                          body: JSON.stringify({
+                            caption: editCaption,
+                            coupleId,
+                          }),
                         });
                         setEditIdx(-1);
                         setEditCaption("");

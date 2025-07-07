@@ -21,17 +21,18 @@ router.post("/", async (req, res) => {
 
 // 항목 완료/후기/사진 수정
 router.patch("/:id", async (req, res) => {
-  const { done, review, photos } = req.body;
+  const { done, review } = req.body;
   const update = {};
   if (done !== undefined) {
     update.done = done;
     update.completedAt = done ? new Date() : null;
   }
   if (review !== undefined) update.review = review;
-  if (photos !== undefined) update.photos = photos;
   const item = await BucketList.findByIdAndUpdate(req.params.id, update, {
     new: true,
   });
+  if (!item)
+    return res.status(404).json({ message: "항목을 찾을 수 없습니다." });
   res.json(item);
 });
 

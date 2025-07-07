@@ -117,6 +117,8 @@ export default function BucketList() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [hearts, setHearts] = useState([]);
+  const [reviewModal, setReviewModal] = useState({ open: false, itemId: null });
+  const [reviewText, setReviewText] = useState("");
 
   // 로그인한 유저의 coupleId 추출
   const coupleId = (() => {
@@ -155,11 +157,26 @@ export default function BucketList() {
   };
 
   const handleCheck = async (id, done) => {
-    await fetch(`${API_URL}/${id}`, {
+    if (!done) {
+      setReviewModal({ open: true, itemId: id });
+      setReviewText("");
+    } else {
+      await fetch(`${API_URL}/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ done: false }),
+      });
+      fetchItems();
+    }
+  };
+
+  const handleReviewSubmit = async () => {
+    await fetch(`${API_URL}/${reviewModal.itemId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ done: !done }),
+      body: JSON.stringify({ done: true, review: reviewText }),
     });
+    setReviewModal({ open: false, itemId: null });
     fetchItems();
   };
 
@@ -231,12 +248,100 @@ export default function BucketList() {
                 />
                 <TitleText done={item.done}>{item.title}</TitleText>
                 {item.done && <DoneBadge>완료!</DoneBadge>}
+                {item.review && (
+                  <div
+                    style={{ color: "#888", marginTop: 6, fontSize: "0.97em" }}
+                  >
+                    후기: {item.review}
+                  </div>
+                )}
                 {/* 후기/사진 업로드 버튼(추후 구현) */}
               </Item>
             ))}
           </List>
         )}
         <MenuGuide>하단 메뉴에서 다른 추억도 확인해보세요!</MenuGuide>
+        {reviewModal.open && (
+          <div
+            style={{
+              position: "fixed",
+              left: 0,
+              top: 0,
+              width: "100vw",
+              height: "100vh",
+              background: "rgba(0,0,0,0.4)",
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: 16,
+                padding: 24,
+                minWidth: 280,
+                boxShadow: "0 4px 24px #0001",
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: 700,
+                  fontSize: 18,
+                  marginBottom: 12,
+                  color: "#ff7eb9",
+                }}
+              >
+                후기 작성
+              </div>
+              <textarea
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                placeholder="함께한 소감이나 추억을 남겨보세요!"
+                style={{
+                  width: "100%",
+                  minHeight: 80,
+                  borderRadius: 8,
+                  border: "1px solid #ffe3ef",
+                  padding: 8,
+                  fontSize: 15,
+                  marginBottom: 12,
+                }}
+              />
+              <div
+                style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}
+              >
+                <button
+                  onClick={() => setReviewModal({ open: false, itemId: null })}
+                  style={{
+                    background: "#bbb",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "0.4em 1em",
+                    cursor: "pointer",
+                  }}
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleReviewSubmit}
+                  style={{
+                    background: "#ff7eb9",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: "0.4em 1em",
+                    cursor: "pointer",
+                  }}
+                >
+                  저장
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </Container>
     </>
   );
