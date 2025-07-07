@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { motion, AnimatePresence } from "framer-motion";
 import "swiper/css";
+import imageCompression from "browser-image-compression";
 
 const API_URL = "https://memories-production-1440.up.railway.app/api/photos";
 const COMMENT_URL =
@@ -297,6 +298,12 @@ function CommentSection({ postId }) {
   );
 }
 
+const getThumbnailUrl = (url) => {
+  if (!url) return url;
+  // Cloudinary URL에서 '/upload/' 뒤에 썸네일 파라미터 삽입
+  return url.replace("/upload/", "/upload/w_400,h_400,c_fill/");
+};
+
 export default function Album() {
   const [files, setFiles] = useState([]);
   const [caption, setCaption] = useState("");
@@ -349,7 +356,13 @@ export default function Album() {
     setLoading(true);
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
-      formData.append("photos", files[i]);
+      // 이미지 리사이즈/압축 적용
+      const compressedFile = await imageCompression(files[i], {
+        maxWidthOrHeight: 1024,
+        maxSizeMB: 0.5,
+        useWebWorker: true,
+      });
+      formData.append("photos", compressedFile);
     }
     formData.append("caption", caption);
     formData.append("coupleId", coupleId);
@@ -439,7 +452,7 @@ export default function Album() {
                 {p.urls.map((url, imgIdx) => (
                   <SwiperSlide key={imgIdx}>
                     <Img
-                      src={url}
+                      src={getThumbnailUrl(url)}
                       alt={p.caption}
                       style={{ cursor: "pointer" }}
                       onClick={() => openModal(photoIdx, imgIdx)}
