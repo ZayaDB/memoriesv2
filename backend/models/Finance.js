@@ -22,8 +22,7 @@ const savingsSchema = new mongoose.Schema({
 
 const financeSchema = new mongoose.Schema({
   coupleId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Couple",
+    type: String,
     required: true,
   },
   // 목표 설정
