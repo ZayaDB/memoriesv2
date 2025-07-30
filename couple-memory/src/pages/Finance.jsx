@@ -756,11 +756,70 @@ export default function Finance({ user, coupleId }) {
                   <StatValue>{getDailyTarget().toLocaleString()}₮</StatValue>
                 </StatItem>
               </StatGrid>
+
+              {/* 목표 진행 상황 상세 */}
+              <div
+                style={{
+                  marginTop: "1em",
+                  padding: "1em",
+                  background: "#f8f9fa",
+                  borderRadius: "12px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "0.5em",
+                  }}
+                >
+                  <span style={{ fontWeight: "bold", color: "#4CAF50" }}>
+                    📊 Одоогийн хадгаламж:
+                  </span>
+                  <span style={{ fontWeight: "bold", color: "#4CAF50" }}>
+                    {financeData.totalSavings?.toLocaleString()}₮
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "0.5em",
+                  }}
+                >
+                  <span style={{ color: "#666" }}>⏳ Үлдсэн дүн:</span>
+                  <span style={{ fontWeight: "bold", color: "#FF9800" }}>
+                    {Math.max(
+                      0,
+                      financeData.goal.targetAmount - financeData.totalSavings
+                    )?.toLocaleString()}
+                    ₮
+                  </span>
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span style={{ color: "#666" }}>
+                    💰 Энэ сар хадгалах боломж:
+                  </span>
+                  <span style={{ fontWeight: "bold", color: "#2196F3" }}>
+                    {financeData.availableForSavings?.toLocaleString()}₮
+                  </span>
+                </div>
+              </div>
+
               <div
                 style={{
                   textAlign: "center",
                   color: "#666",
                   fontSize: "0.9rem",
+                  marginTop: "1em",
                 }}
               >
                 {getRemainingDays()} хоног үлдлээ
@@ -1015,7 +1074,7 @@ export default function Finance({ user, coupleId }) {
               }}
             >
               <span style={{ fontWeight: "bold", color: "#4CAF50" }}>
-                🎯 Сарын зорилгын хадгаламж:
+                🎯 Зорилгын хадгаламж:
               </span>
               <span style={{ fontWeight: "bold", color: "#4CAF50" }}>
                 {financeData.monthlyTargetSavings?.toLocaleString()}₮
@@ -1026,6 +1085,7 @@ export default function Finance({ user, coupleId }) {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
+                marginBottom: "0.5em",
               }}
             >
               <span style={{ color: "#666" }}>➕ Нэмэлт хадгалах боломж:</span>
@@ -1038,6 +1098,49 @@ export default function Finance({ user, coupleId }) {
                 ₮
               </span>
             </div>
+
+            {/* 목표 달성 가이드 */}
+            {financeData.goal && financeData.availableForSavings > 0 && (
+              <div
+                style={{
+                  marginTop: "0.8em",
+                  padding: "0.8em",
+                  background: "#e8f5e8",
+                  borderRadius: "8px",
+                  border: "1px solid #4CAF50",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "0.9rem",
+                    color: "#2E7D32",
+                    fontWeight: "bold",
+                    marginBottom: "0.3em",
+                  }}
+                >
+                  💡 Зорилго хурдан биелүүлэх зөвлөмж:
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "#666" }}>
+                  Энэ сард{" "}
+                  {Math.min(
+                    financeData.availableForSavings,
+                    financeData.goal.targetAmount - financeData.totalSavings
+                  )?.toLocaleString()}
+                  ₮ хадгалбал зорилгын{" "}
+                  {(
+                    (Math.min(
+                      financeData.availableForSavings,
+                      financeData.goal.targetAmount - financeData.totalSavings
+                    ) /
+                      (financeData.goal.targetAmount -
+                        financeData.totalSavings)) *
+                    100
+                  )?.toFixed(1)}
+                  % биелнэ!
+                </div>
+              </div>
+            )}
+
             <div style={{ textAlign: "center", marginTop: "0.5em" }}>
               <AddButton
                 onClick={() => openModal("target-savings")}
@@ -1180,7 +1283,7 @@ export default function Finance({ user, coupleId }) {
                   {modalType === "goal"
                     ? "🎯 Зорилго тохируулах"
                     : modalType === "target-savings"
-                    ? "🎯 Сарын зорилгын хадгаламж тохируулах"
+                    ? "🎯 Зорилгын хадгаламж тохируулах"
                     : modalType === "income"
                     ? "💰 Орлого нэмэх"
                     : modalType === "fixed-expense"
@@ -1224,7 +1327,7 @@ export default function Finance({ user, coupleId }) {
                   <>
                     <Input
                       type="number"
-                      placeholder="Сарын зорилгын хадгаламж (₮)"
+                      placeholder="Зорилгын хадгаламжийн дүн (₮)"
                       value={formData.monthlyTargetSavings || ""}
                       onChange={(e) =>
                         setFormData({
