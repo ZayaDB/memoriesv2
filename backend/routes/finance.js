@@ -15,13 +15,21 @@ router.get("/", async (req, res) => {
       console.log("새로운 Finance 데이터 생성");
       const newFinance = await Finance.create({
         coupleId,
+        goal: {
+          targetAmount: 0,
+          startDate: new Date(),
+          endDate: new Date(),
+          monthlyTarget: 0,
+        },
         monthlyIncome: 0,
-        weeklyIncome: 0,
-        monthlyBudget: 0,
-        savingsGoal: 0,
-        savings: 0,
-        expenses: [],
         incomes: [],
+        monthlyFixedExpense: 0,
+        fixedExpenses: [],
+        monthlySavings: 0,
+        totalSavings: 0,
+        savings: [],
+        availableForSavings: 0,
+        goalProgress: 0,
       });
       return res.json(newFinance);
     }
@@ -33,11 +41,43 @@ router.get("/", async (req, res) => {
   }
 });
 
+// 목표 설정
+router.post("/goal", async (req, res) => {
+  const { coupleId, targetAmount, startDate, endDate } = req.body;
+  if (!coupleId || !targetAmount) {
+    return res.status(400).json({ error: "커플ID와 목표 금액이 필요합니다" });
+  }
+
+  try {
+    let finance = await Finance.findOne({ coupleId });
+    if (!finance) {
+      finance = await Finance.create({ coupleId });
+    }
+
+    finance.goal = {
+      targetAmount: Number(targetAmount),
+      startDate: startDate ? new Date(startDate) : new Date(),
+      endDate: endDate ? new Date(endDate) : new Date(),
+      monthlyTarget: 0,
+    };
+
+    finance.calculateMonthlyTarget();
+    finance.calculateGoalProgress();
+    await finance.save();
+    res.json(finance);
+  } catch (error) {
+    console.error("목표 설정 에러:", error);
+    res.status(500).json({ error: "목표 설정 실패" });
+  }
+});
+
 // 수익 추가
 router.post("/income", async (req, res) => {
   const { coupleId, amount, category, date, description } = req.body;
-  if (!coupleId || !amount) {
-    return res.status(400).json({ error: "커플ID와 금액이 필요합니다" });
+  if (!coupleId || !amount || !category) {
+    return res
+      .status(400)
+      .json({ error: "커플ID, 금액, 카테고리가 필요합니다" });
   }
 
   try {
@@ -48,16 +88,18 @@ router.post("/income", async (req, res) => {
 
     const income = {
       amount: Number(amount),
-      category: category || "기타",
-      date: date || new Date(),
+      category: category,
+      date: date ? new Date(date) : new Date(),
       description: description || "",
     };
 
     finance.incomes.push(income);
+
+    // 이번달 수익 계산
+    const now = new Date();
     finance.monthlyIncome = finance.incomes
       .filter((inc) => {
         const incDate = new Date(inc.date);
-        const now = new Date();
         return (
           incDate.getMonth() === now.getMonth() &&
           incDate.getFullYear() === now.getFullYear()
@@ -65,25 +107,61 @@ router.post("/income", async (req, res) => {
       })
       .reduce((sum, inc) => sum + inc.amount, 0);
 
-    finance.weeklyIncome = finance.incomes
-      .filter((inc) => {
-        const incDate = new Date(inc.date);
-        const now = new Date();
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        return incDate >= weekAgo;
-      })
-      .reduce((sum, inc) => sum + inc.amount, 0);
-
+    finance.calculateAvailableSavings();
     await finance.save();
     res.json(finance);
   } catch (error) {
+    console.error("수익 추가 에러:", error);
     res.status(500).json({ error: "수익 추가 실패" });
   }
 });
 
-// 지출 추가
-router.post("/expense", async (req, res) => {
-  const { coupleId, amount, category, date, description } = req.body;
+// 고정 지출 추가
+router.post("/fixed-expense", async (req, res) => {
+  const { coupleId, name, amount, date, description } = req.body;
+  if (!coupleId || !name || !amount) {
+    return res.status(400).json({ error: "커플ID, 지출명, 금액이 필요합니다" });
+  }
+
+  try {
+    let finance = await Finance.findOne({ coupleId });
+    if (!finance) {
+      finance = await Finance.create({ coupleId });
+    }
+
+    const fixedExpense = {
+      name: name,
+      amount: Number(amount),
+      date: date ? new Date(date) : new Date(),
+      description: description || "",
+    };
+
+    finance.fixedExpenses.push(fixedExpense);
+
+    // 이번달 고정 지출 계산
+    const now = new Date();
+    finance.monthlyFixedExpense = finance.fixedExpenses
+      .filter((exp) => {
+        const expDate = new Date(exp.date);
+        return (
+          expDate.getMonth() === now.getMonth() &&
+          expDate.getFullYear() === now.getFullYear()
+        );
+      })
+      .reduce((sum, exp) => sum + exp.amount, 0);
+
+    finance.calculateAvailableSavings();
+    await finance.save();
+    res.json(finance);
+  } catch (error) {
+    console.error("고정 지출 추가 에러:", error);
+    res.status(500).json({ error: "고정 지출 추가 실패" });
+  }
+});
+
+// 적금 추가
+router.post("/savings", async (req, res) => {
+  const { coupleId, amount, date, description } = req.body;
   if (!coupleId || !amount) {
     return res.status(400).json({ error: "커플ID와 금액이 필요합니다" });
   }
@@ -94,78 +172,42 @@ router.post("/expense", async (req, res) => {
       finance = await Finance.create({ coupleId });
     }
 
-    const expense = {
+    const savings = {
       amount: Number(amount),
-      category: category || "기타",
-      date: date || new Date(),
+      date: date ? new Date(date) : new Date(),
       description: description || "",
     };
 
-    finance.expenses.push(expense);
-    finance.monthlyExpense = finance.expenses
-      .filter((exp) => {
-        const expDate = new Date(exp.date);
-        const now = new Date();
+    finance.savings.push(savings);
+
+    // 이번달 적금 계산
+    const now = new Date();
+    finance.monthlySavings = finance.savings
+      .filter((sav) => {
+        const savDate = new Date(sav.date);
         return (
-          expDate.getMonth() === now.getMonth() &&
-          expDate.getFullYear() === now.getFullYear()
+          savDate.getMonth() === now.getMonth() &&
+          savDate.getFullYear() === now.getFullYear()
         );
       })
-      .reduce((sum, exp) => sum + exp.amount, 0);
+      .reduce((sum, sav) => sum + sav.amount, 0);
 
+    // 총 적금 계산
+    finance.totalSavings = finance.savings.reduce(
+      (sum, sav) => sum + sav.amount,
+      0
+    );
+
+    finance.calculateGoalProgress();
     await finance.save();
     res.json(finance);
   } catch (error) {
-    res.status(500).json({ error: "지출 추가 실패" });
+    console.error("적금 추가 에러:", error);
+    res.status(500).json({ error: "적금 추가 실패" });
   }
 });
 
-// 목표 설정 (예산, 저축목표)
-router.patch("/goals", async (req, res) => {
-  const { coupleId, monthlyBudget, savingsGoal } = req.body;
-  if (!coupleId) {
-    return res.status(400).json({ error: "커플ID가 필요합니다" });
-  }
-
-  try {
-    let finance = await Finance.findOne({ coupleId });
-    if (!finance) {
-      finance = await Finance.create({ coupleId });
-    }
-
-    if (monthlyBudget !== undefined)
-      finance.monthlyBudget = Number(monthlyBudget);
-    if (savingsGoal !== undefined) finance.savingsGoal = Number(savingsGoal);
-
-    await finance.save();
-    res.json(finance);
-  } catch (error) {
-    res.status(500).json({ error: "목표 설정 실패" });
-  }
-});
-
-// 저축액 업데이트
-router.patch("/savings", async (req, res) => {
-  const { coupleId, savings } = req.body;
-  if (!coupleId || savings === undefined) {
-    return res.status(400).json({ error: "커플ID와 저축액이 필요합니다" });
-  }
-
-  try {
-    let finance = await Finance.findOne({ coupleId });
-    if (!finance) {
-      finance = await Finance.create({ coupleId });
-    }
-
-    finance.savings = Number(savings);
-    await finance.save();
-    res.json(finance);
-  } catch (error) {
-    res.status(500).json({ error: "저축액 업데이트 실패" });
-  }
-});
-
-// 수익/지출 삭제
+// 수익/고정지출/적금 삭제
 router.delete("/:type/:id", async (req, res) => {
   const { coupleId } = req.query;
   const { type, id } = req.params;
@@ -184,17 +226,22 @@ router.delete("/:type/:id", async (req, res) => {
       finance.incomes = finance.incomes.filter(
         (inc) => inc._id.toString() !== id
       );
-    } else if (type === "expense") {
-      finance.expenses = finance.expenses.filter(
+    } else if (type === "fixed-expense") {
+      finance.fixedExpenses = finance.fixedExpenses.filter(
         (exp) => exp._id.toString() !== id
+      );
+    } else if (type === "savings") {
+      finance.savings = finance.savings.filter(
+        (sav) => sav._id.toString() !== id
       );
     }
 
     // 재계산
+    const now = new Date();
+
     finance.monthlyIncome = finance.incomes
       .filter((inc) => {
         const incDate = new Date(inc.date);
-        const now = new Date();
         return (
           incDate.getMonth() === now.getMonth() &&
           incDate.getFullYear() === now.getFullYear()
@@ -202,19 +249,9 @@ router.delete("/:type/:id", async (req, res) => {
       })
       .reduce((sum, inc) => sum + inc.amount, 0);
 
-    finance.weeklyIncome = finance.incomes
-      .filter((inc) => {
-        const incDate = new Date(inc.date);
-        const now = new Date();
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        return incDate >= weekAgo;
-      })
-      .reduce((sum, inc) => sum + inc.amount, 0);
-
-    finance.monthlyExpense = finance.expenses
+    finance.monthlyFixedExpense = finance.fixedExpenses
       .filter((exp) => {
         const expDate = new Date(exp.date);
-        const now = new Date();
         return (
           expDate.getMonth() === now.getMonth() &&
           expDate.getFullYear() === now.getFullYear()
@@ -222,9 +259,27 @@ router.delete("/:type/:id", async (req, res) => {
       })
       .reduce((sum, exp) => sum + exp.amount, 0);
 
+    finance.monthlySavings = finance.savings
+      .filter((sav) => {
+        const savDate = new Date(sav.date);
+        return (
+          savDate.getMonth() === now.getMonth() &&
+          savDate.getFullYear() === now.getFullYear()
+        );
+      })
+      .reduce((sum, sav) => sum + sav.amount, 0);
+
+    finance.totalSavings = finance.savings.reduce(
+      (sum, sav) => sum + sav.amount,
+      0
+    );
+
+    finance.calculateAvailableSavings();
+    finance.calculateGoalProgress();
     await finance.save();
     res.json(finance);
   } catch (error) {
+    console.error("삭제 에러:", error);
     res.status(500).json({ error: "삭제 실패" });
   }
 });

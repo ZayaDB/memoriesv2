@@ -45,6 +45,9 @@ const CardTitle = styled.h3`
   color: ${({ theme }) => theme.colors.primary};
   margin-bottom: 1em;
   font-family: ${({ theme }) => theme.font.cute};
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
 `;
 
 const Amount = styled.div`
@@ -143,6 +146,8 @@ const ModalContent = styled.div`
   width: 90%;
   max-width: 400px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-height: 80vh;
+  overflow-y: auto;
 `;
 
 const Input = styled.input`
@@ -190,24 +195,35 @@ const API_BASE = "https://memories-production-1440.up.railway.app";
 
 export default function Finance({ user, coupleId }) {
   const [financeData, setFinanceData] = useState({
+    goal: {
+      targetAmount: 0,
+      startDate: new Date(),
+      endDate: new Date(),
+      monthlyTarget: 0,
+    },
     monthlyIncome: 0,
-    weeklyIncome: 0,
-    monthlyExpense: 0,
-    monthlyBudget: 0,
-    savings: 0,
-    savingsGoal: 0,
-    expenses: [],
     incomes: [],
+    monthlyFixedExpense: 0,
+    fixedExpenses: [],
+    monthlySavings: 0,
+    totalSavings: 0,
+    savings: [],
+    availableForSavings: 0,
+    goalProgress: 0,
   });
 
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(""); // "income" or "expense" or "goals"
+  const [modalType, setModalType] = useState(""); // "goal", "income", "fixed-expense", "savings"
   const [formData, setFormData] = useState({
     amount: "",
     category: "",
+    name: "",
     description: "",
     date: new Date().toISOString().split("T")[0],
+    targetAmount: "",
+    startDate: "",
+    endDate: "",
   });
 
   useEffect(() => {
@@ -232,7 +248,37 @@ export default function Finance({ user, coupleId }) {
     }
   };
 
+  const handleSetGoal = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/finance/goal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          coupleId,
+          targetAmount: Number(formData.targetAmount),
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedData = await response.json();
+        setFinanceData(updatedData);
+        setShowModal(false);
+        alert("목표가 설정되었습니다!");
+      }
+    } catch (error) {
+      console.error("목표 설정 실패:", error);
+      alert("목표 설정 중 오류가 발생했습니다.");
+    }
+  };
+
   const handleAddIncome = async () => {
+    if (!formData.amount || !formData.category) {
+      alert("금액과 카테고리를 입력해주세요.");
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE}/api/finance/income`, {
         method: "POST",
@@ -256,71 +302,30 @@ export default function Finance({ user, coupleId }) {
           description: "",
           date: new Date().toISOString().split("T")[0],
         });
+        alert("수익이 추가되었습니다!");
       }
     } catch (error) {
       console.error("수익 추가 실패:", error);
+      alert("수익 추가 중 오류가 발생했습니다.");
     }
   };
 
-  const handleAddExpense = async () => {
-    console.log("지출 추가 시작:", { coupleId, formData });
-
-    if (!formData.amount || !formData.category) {
-      alert("금액과 카테고리를 입력해주세요.");
+  const handleAddFixedExpense = async () => {
+    if (!formData.name || !formData.amount) {
+      alert("지출명과 금액을 입력해주세요.");
       return;
     }
 
     try {
-      const requestBody = {
-        coupleId,
-        amount: Number(formData.amount),
-        category: formData.category,
-        description: formData.description,
-        date: formData.date,
-      };
-
-      console.log("요청 데이터:", requestBody);
-
-      const response = await fetch(`${API_BASE}/api/finance/expense`, {
+      const response = await fetch(`${API_BASE}/api/finance/fixed-expense`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-
-      console.log("응답 상태:", response.status);
-
-      if (response.ok) {
-        const updatedData = await response.json();
-        console.log("업데이트된 데이터:", updatedData);
-        setFinanceData(updatedData);
-        setShowModal(false);
-        setFormData({
-          amount: "",
-          category: "",
-          description: "",
-          date: new Date().toISOString().split("T")[0],
-        });
-        alert("지출이 추가되었습니다!");
-      } else {
-        const errorData = await response.json();
-        console.error("서버 에러:", errorData);
-        alert(`지출 추가 실패: ${errorData.error || "알 수 없는 오류"}`);
-      }
-    } catch (error) {
-      console.error("지출 추가 실패:", error);
-      alert("지출 추가 중 오류가 발생했습니다.");
-    }
-  };
-
-  const handleUpdateGoals = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/api/finance/goals`, {
-        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           coupleId,
-          monthlyBudget: Number(formData.amount),
-          savingsGoal: Number(formData.savingsGoal || 0),
+          name: formData.name,
+          amount: Number(formData.amount),
+          description: formData.description,
+          date: formData.date,
         }),
       });
 
@@ -330,24 +335,68 @@ export default function Finance({ user, coupleId }) {
         setShowModal(false);
         setFormData({
           amount: "",
-          category: "",
+          name: "",
           description: "",
           date: new Date().toISOString().split("T")[0],
         });
+        alert("고정 지출이 추가되었습니다!");
       }
     } catch (error) {
-      console.error("목표 설정 실패:", error);
+      console.error("고정 지출 추가 실패:", error);
+      alert("고정 지출 추가 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleAddSavings = async () => {
+    if (!formData.amount) {
+      alert("금액을 입력해주세요.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/api/finance/savings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          coupleId,
+          amount: Number(formData.amount),
+          description: formData.description,
+          date: formData.date,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedData = await response.json();
+        setFinanceData(updatedData);
+        setShowModal(false);
+        setFormData({
+          amount: "",
+          description: "",
+          date: new Date().toISOString().split("T")[0],
+        });
+        alert("적금이 추가되었습니다!");
+      }
+    } catch (error) {
+      console.error("적금 추가 실패:", error);
+      alert("적금 추가 중 오류가 발생했습니다.");
     }
   };
 
   const openModal = (type) => {
     setModalType(type);
     setShowModal(true);
-    if (type === "goals") {
+    if (type === "goal") {
       setFormData({
-        amount: financeData.monthlyBudget.toString(),
-        savingsGoal: financeData.savingsGoal.toString(),
+        targetAmount: financeData.goal.targetAmount.toString(),
+        startDate: financeData.goal.startDate
+          ? new Date(financeData.goal.startDate).toISOString().split("T")[0]
+          : "",
+        endDate: financeData.goal.endDate
+          ? new Date(financeData.goal.endDate).toISOString().split("T")[0]
+          : "",
+        amount: "",
         category: "",
+        name: "",
         description: "",
         date: new Date().toISOString().split("T")[0],
       });
@@ -355,18 +404,26 @@ export default function Finance({ user, coupleId }) {
       setFormData({
         amount: "",
         category: "",
+        name: "",
         description: "",
         date: new Date().toISOString().split("T")[0],
       });
     }
   };
 
-  const getProgressPercentage = (current, goal) => {
-    return goal > 0 ? (current / goal) * 100 : 0;
+  const getRemainingDays = () => {
+    if (!financeData.goal.endDate) return 0;
+    const endDate = new Date(financeData.goal.endDate);
+    const now = new Date();
+    const diffTime = endDate - now;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  const getRemainingBudget = () => {
-    return financeData.monthlyBudget - financeData.monthlyExpense;
+  const getDailyTarget = () => {
+    const remainingDays = getRemainingDays();
+    const remainingAmount =
+      financeData.goal.targetAmount - financeData.totalSavings;
+    return remainingDays > 0 ? Math.ceil(remainingAmount / remainingDays) : 0;
   };
 
   if (loading) {
@@ -384,101 +441,145 @@ export default function Finance({ user, coupleId }) {
     <>
       <BG />
       <Container>
-        <Title>💰 금융관리</Title>
+        <Title>💰 우리 돈 관리</Title>
 
+        {/* 목표 현황 */}
         <Card
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <CardTitle>이번달 수익</CardTitle>
-          <Amount positive={true}>
-            {financeData.monthlyIncome.toLocaleString()}원
-          </Amount>
-          <StatGrid>
-            <StatItem>
-              <StatLabel>이번주 수익</StatLabel>
-              <StatValue>
-                {financeData.weeklyIncome.toLocaleString()}원
-              </StatValue>
-            </StatItem>
-            <StatItem>
-              <StatLabel>수익 항목</StatLabel>
-              <StatValue>{financeData.incomes.length}개</StatValue>
-            </StatItem>
-          </StatGrid>
+          <CardTitle>
+            🎯 우리의 목표
+            {financeData.goal.targetAmount === 0 && (
+              <AddButton
+                onClick={() => openModal("goal")}
+                style={{
+                  fontSize: "0.8rem",
+                  padding: "0.3em 0.8em",
+                  margin: 0,
+                }}
+              >
+                설정
+              </AddButton>
+            )}
+          </CardTitle>
+          {financeData.goal.targetAmount > 0 ? (
+            <>
+              <Amount positive={true}>
+                {financeData.goal.targetAmount.toLocaleString()}원
+              </Amount>
+              <ProgressBar>
+                <ProgressFill percentage={financeData.goalProgress} />
+              </ProgressBar>
+              <StatGrid>
+                <StatItem>
+                  <StatLabel>현재 모은 금액</StatLabel>
+                  <StatValue>
+                    {financeData.totalSavings.toLocaleString()}원
+                  </StatValue>
+                </StatItem>
+                <StatItem>
+                  <StatLabel>달성률</StatLabel>
+                  <StatValue>{financeData.goalProgress}%</StatValue>
+                </StatItem>
+                <StatItem>
+                  <StatLabel>남은 기간</StatLabel>
+                  <StatValue>{getRemainingDays()}일</StatValue>
+                </StatItem>
+                <StatItem>
+                  <StatLabel>하루 목표</StatLabel>
+                  <StatValue>{getDailyTarget().toLocaleString()}원</StatValue>
+                </StatItem>
+              </StatGrid>
+            </>
+          ) : (
+            <div style={{ textAlign: "center", color: "#666", padding: "2em" }}>
+              목표를 설정해주세요!
+            </div>
+          )}
         </Card>
 
+        {/* 수익 현황 */}
         <Card
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <CardTitle>이번달 지출</CardTitle>
-          <Amount positive={false}>
-            {financeData.monthlyExpense.toLocaleString()}원
+          <CardTitle>💰 이번달 수익</CardTitle>
+          <Amount positive={true}>
+            {financeData.monthlyIncome.toLocaleString()}원
           </Amount>
-          <ProgressBar>
-            <ProgressFill
-              percentage={getProgressPercentage(
-                financeData.monthlyExpense,
-                financeData.monthlyBudget
-              )}
-            />
-          </ProgressBar>
           <StatGrid>
             <StatItem>
-              <StatLabel>예산</StatLabel>
-              <StatValue>
-                {financeData.monthlyBudget.toLocaleString()}원
-              </StatValue>
+              <StatLabel>수익 항목</StatLabel>
+              <StatValue>{financeData.incomes.length}개</StatValue>
             </StatItem>
             <StatItem>
-              <StatLabel>남은 예산</StatLabel>
-              <StatValue
-                style={{
-                  color: getRemainingBudget() > 0 ? "#4CAF50" : "#FF5722",
-                }}
-              >
-                {getRemainingBudget().toLocaleString()}원
+              <StatLabel>적금 가능</StatLabel>
+              <StatValue>
+                {financeData.availableForSavings.toLocaleString()}원
               </StatValue>
             </StatItem>
           </StatGrid>
         </Card>
 
+        {/* 고정 지출 현황 */}
         <Card
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <CardTitle>저축 현황</CardTitle>
-          <Amount positive={true}>
-            {financeData.savings.toLocaleString()}원
+          <CardTitle>💸 이번달 고정 지출</CardTitle>
+          <Amount positive={false}>
+            {financeData.monthlyFixedExpense.toLocaleString()}원
           </Amount>
-          <ProgressBar>
-            <ProgressFill
-              percentage={getProgressPercentage(
-                financeData.savings,
-                financeData.savingsGoal
-              )}
-            />
-          </ProgressBar>
           <StatGrid>
             <StatItem>
-              <StatLabel>목표</StatLabel>
-              <StatValue>
-                {financeData.savingsGoal.toLocaleString()}원
-              </StatValue>
+              <StatLabel>지출 항목</StatLabel>
+              <StatValue>{financeData.fixedExpenses.length}개</StatValue>
             </StatItem>
             <StatItem>
-              <StatLabel>달성률</StatLabel>
+              <StatLabel>수익 대비</StatLabel>
               <StatValue>
-                {Math.round(
-                  getProgressPercentage(
-                    financeData.savings,
-                    financeData.savingsGoal
-                  )
-                )}
+                {financeData.monthlyIncome > 0
+                  ? Math.round(
+                      (financeData.monthlyFixedExpense /
+                        financeData.monthlyIncome) *
+                        100
+                    )
+                  : 0}
+                %
+              </StatValue>
+            </StatItem>
+          </StatGrid>
+        </Card>
+
+        {/* 적금 현황 */}
+        <Card
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <CardTitle>🏦 이번달 적금</CardTitle>
+          <Amount positive={true}>
+            {financeData.monthlySavings.toLocaleString()}원
+          </Amount>
+          <StatGrid>
+            <StatItem>
+              <StatLabel>적금 횟수</StatLabel>
+              <StatValue>{financeData.savings.length}회</StatValue>
+            </StatItem>
+            <StatItem>
+              <StatLabel>월 목표 대비</StatLabel>
+              <StatValue>
+                {financeData.goal.monthlyTarget > 0
+                  ? Math.round(
+                      (financeData.monthlySavings /
+                        financeData.goal.monthlyTarget) *
+                        100
+                    )
+                  : 0}
                 %
               </StatValue>
             </StatItem>
@@ -489,23 +590,30 @@ export default function Finance({ user, coupleId }) {
           <AddButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => openModal("goal")}
+          >
+            🎯 목표 설정
+          </AddButton>
+          <AddButton
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => openModal("income")}
           >
-            + 수익 추가
+            💰 수익 추가
           </AddButton>
           <AddButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => openModal("expense")}
+            onClick={() => openModal("fixed-expense")}
           >
-            + 지출 추가
+            💸 고정 지출
           </AddButton>
           <AddButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => openModal("goals")}
+            onClick={() => openModal("savings")}
           >
-            목표 설정
+            🏦 적금 추가
           </AddButton>
         </ButtonGroup>
       </Container>
@@ -523,33 +631,43 @@ export default function Finance({ user, coupleId }) {
               exit={{ scale: 0.8, opacity: 0 }}
             >
               <h3 style={{ marginBottom: "1em", color: "#ff7eb9" }}>
-                {modalType === "income"
-                  ? "수익 추가"
-                  : modalType === "expense"
-                  ? "지출 추가"
-                  : "목표 설정"}
+                {modalType === "goal"
+                  ? "🎯 목표 설정"
+                  : modalType === "income"
+                  ? "💰 수익 추가"
+                  : modalType === "fixed-expense"
+                  ? "💸 고정 지출 추가"
+                  : "🏦 적금 추가"}
               </h3>
 
-              {modalType === "goals" ? (
+              {modalType === "goal" ? (
                 <>
                   <Input
                     type="number"
-                    placeholder="월 예산 (원)"
-                    value={formData.amount}
+                    placeholder="목표 금액 (원)"
+                    value={formData.targetAmount}
                     onChange={(e) =>
-                      setFormData({ ...formData, amount: e.target.value })
+                      setFormData({ ...formData, targetAmount: e.target.value })
                     }
                   />
                   <Input
-                    type="number"
-                    placeholder="저축 목표 (원)"
-                    value={formData.savingsGoal}
+                    type="date"
+                    placeholder="시작일"
+                    value={formData.startDate}
                     onChange={(e) =>
-                      setFormData({ ...formData, savingsGoal: e.target.value })
+                      setFormData({ ...formData, startDate: e.target.value })
+                    }
+                  />
+                  <Input
+                    type="date"
+                    placeholder="목표일"
+                    value={formData.endDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, endDate: e.target.value })
                     }
                   />
                 </>
-              ) : (
+              ) : modalType === "income" ? (
                 <>
                   <Input
                     type="number"
@@ -566,24 +684,69 @@ export default function Finance({ user, coupleId }) {
                     }
                   >
                     <option value="">카테고리 선택</option>
-                    {modalType === "income" ? (
-                      <>
-                        <option value="급여">급여</option>
-                        <option value="부업">부업</option>
-                        <option value="투자">투자</option>
-                        <option value="기타">기타</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="식비">식비</option>
-                        <option value="교통비">교통비</option>
-                        <option value="쇼핑">쇼핑</option>
-                        <option value="문화생활">문화생활</option>
-                        <option value="주거비">주거비</option>
-                        <option value="기타">기타</option>
-                      </>
-                    )}
+                    <option value="급여">급여</option>
+                    <option value="부업">부업</option>
+                    <option value="투자">투자</option>
+                    <option value="기타">기타</option>
                   </Select>
+                  <Input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) =>
+                      setFormData({ ...formData, date: e.target.value })
+                    }
+                  />
+                  <TextArea
+                    placeholder="메모 (선택사항)"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                  />
+                </>
+              ) : modalType === "fixed-expense" ? (
+                <>
+                  <Input
+                    type="text"
+                    placeholder="지출명 (예: 월세, 관리비)"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                  />
+                  <Input
+                    type="number"
+                    placeholder="금액 (원)"
+                    value={formData.amount}
+                    onChange={(e) =>
+                      setFormData({ ...formData, amount: e.target.value })
+                    }
+                  />
+                  <Input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) =>
+                      setFormData({ ...formData, date: e.target.value })
+                    }
+                  />
+                  <TextArea
+                    placeholder="메모 (선택사항)"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                  />
+                </>
+              ) : (
+                <>
+                  <Input
+                    type="number"
+                    placeholder="적금 금액 (원)"
+                    value={formData.amount}
+                    onChange={(e) =>
+                      setFormData({ ...formData, amount: e.target.value })
+                    }
+                  />
                   <Input
                     type="date"
                     value={formData.date}
@@ -604,9 +767,11 @@ export default function Finance({ user, coupleId }) {
               <ButtonGroup>
                 <AddButton
                   onClick={() => {
-                    if (modalType === "income") handleAddIncome();
-                    else if (modalType === "expense") handleAddExpense();
-                    else if (modalType === "goals") handleUpdateGoals();
+                    if (modalType === "goal") handleSetGoal();
+                    else if (modalType === "income") handleAddIncome();
+                    else if (modalType === "fixed-expense")
+                      handleAddFixedExpense();
+                    else if (modalType === "savings") handleAddSavings();
                   }}
                 >
                   저장
