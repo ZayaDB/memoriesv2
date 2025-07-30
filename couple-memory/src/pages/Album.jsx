@@ -136,12 +136,21 @@ const DownloadDialog = styled(motion.div)`
   transform: translate(-50%, -50%);
   background: white;
   border-radius: 20px;
-  padding: 2em;
+  padding: 1.5em;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  z-index: 10000;
+  z-index: 10001;
   text-align: center;
-  max-width: 300px;
-  width: 90%;
+  max-width: 90vw;
+  width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
+
+  @media (max-width: 480px) {
+    width: 90vw;
+    max-width: 300px;
+    padding: 1.2em;
+    margin: 20px;
+  }
 `;
 
 const DownloadButton = styled.button`
@@ -149,14 +158,21 @@ const DownloadButton = styled.button`
   color: white;
   border: none;
   border-radius: 12px;
-  padding: 1em 2em;
+  padding: 0.8em 1.5em;
   font-size: 1rem;
   cursor: pointer;
-  margin: 0.5em;
+  margin: 0.3em;
   font-family: ${({ theme }) => theme.font.cute};
+  min-width: 100px;
 
   &:hover {
     background: #ffb3d1;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.7em 1.2em;
+    font-size: 0.9rem;
+    margin: 0.2em;
   }
 `;
 
@@ -165,11 +181,18 @@ const CancelButton = styled.button`
   color: white;
   border: none;
   border-radius: 12px;
-  padding: 1em 2em;
+  padding: 0.8em 1.5em;
   font-size: 1rem;
   cursor: pointer;
-  margin: 0.5em;
+  margin: 0.3em;
   font-family: ${({ theme }) => theme.font.cute};
+  min-width: 100px;
+
+  @media (max-width: 480px) {
+    padding: 0.7em 1.2em;
+    font-size: 0.9rem;
+    margin: 0.2em;
+  }
 `;
 
 const CommentBox = styled.div`
@@ -710,17 +733,32 @@ export default function Album() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
               >
-                <h3 style={{ marginBottom: "1em", color: "#ff7eb9" }}>
+                <h3
+                  style={{
+                    marginBottom: "0.8em",
+                    color: "#ff7eb9",
+                    fontSize: "1.2rem",
+                    fontWeight: "bold",
+                  }}
+                >
                   💾 Зургийг хадгалах
                 </h3>
-                <p style={{ marginBottom: "1.5em", color: "#666" }}>
+                <p
+                  style={{
+                    marginBottom: "1.2em",
+                    color: "#666",
+                    fontSize: "0.95rem",
+                    lineHeight: "1.4",
+                  }}
+                >
                   Энэ зургийг хадгахдаа итгэлтэй байна уу?
                 </p>
                 <div
                   style={{
                     display: "flex",
-                    gap: "1em",
+                    gap: "0.8em",
                     justifyContent: "center",
+                    flexWrap: "wrap",
                   }}
                 >
                   <DownloadButton

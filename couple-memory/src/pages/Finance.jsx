@@ -137,17 +137,24 @@ const Modal = styled(motion.div)`
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 20px;
 `;
 
 const ModalContent = styled.div`
   background: white;
   border-radius: 20px;
-  padding: 2em;
-  width: 90%;
+  padding: 1.5em;
+  width: 100%;
   max-width: 400px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   max-height: 80vh;
   overflow-y: auto;
+
+  @media (max-width: 480px) {
+    padding: 1.2em;
+    margin: 10px;
+    max-height: 85vh;
+  }
 `;
 
 const Input = styled.input`
@@ -194,6 +201,9 @@ const TextArea = styled.textarea`
 const API_BASE = "https://memories-production-1440.up.railway.app";
 
 export default function Finance({ user, coupleId }) {
+  console.log("Finance компонент - user:", user);
+  console.log("Finance компонент - coupleId:", coupleId);
+
   const [financeData, setFinanceData] = useState({
     goal: null,
     monthlyIncome: 0,
@@ -218,11 +228,26 @@ export default function Finance({ user, coupleId }) {
 
   const loadFinanceData = async () => {
     try {
+      console.log("Санхүүгийн мэдээлэл ачаалах - coupleId:", coupleId);
+
       const response = await fetch(
         `https://memories-production-1440.up.railway.app/api/finance?coupleId=${coupleId}`
       );
-      const data = await response.json();
-      setFinanceData(data);
+
+      console.log(
+        "Санхүүгийн мэдээлэл ачаалах - хариу:",
+        response.status,
+        response.statusText
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Санхүүгийн мэдээлэл ачаалах - амжилттай:", data);
+        setFinanceData(data);
+      } else {
+        const errorData = await response.json();
+        console.error("Санхүүгийн мэдээлэл ачаалах - алдаа:", errorData);
+      }
     } catch (error) {
       console.error("Санхүүгийн мэдээлэл ачаалахад алдаа:", error);
     }
@@ -256,6 +281,15 @@ export default function Finance({ user, coupleId }) {
 
   const handleAddIncome = async () => {
     try {
+      console.log("Орлого нэмэх - илгээх өгөгдөл:", {
+        coupleId,
+        amount: parseInt(formData.amount),
+        category: formData.category,
+        name: formData.name,
+        date: formData.date,
+        description: formData.description,
+      });
+
       const response = await fetch(
         "https://memories-production-1440.up.railway.app/api/finance/income",
         {
@@ -271,10 +305,25 @@ export default function Finance({ user, coupleId }) {
           }),
         }
       );
+
+      console.log(
+        "Орлого нэмэх - хариу:",
+        response.status,
+        response.statusText
+      );
+
       if (response.ok) {
+        const responseData = await response.json();
+        console.log("Орлого нэмэх - амжилттай:", responseData);
         alert("Орлого нэмэгдлээ!");
         setModalOpen(false);
         loadFinanceData();
+      } else {
+        const errorData = await response.json();
+        console.error("Орлого нэмэх - алдаа:", errorData);
+        alert(
+          `Орлого нэмэхэд алдаа гарлаа: ${errorData.message || "Unknown error"}`
+        );
       }
     } catch (error) {
       console.error("Орлого нэмэх алдаа:", error);
@@ -288,6 +337,13 @@ export default function Finance({ user, coupleId }) {
       return;
     }
     try {
+      console.log("Тогтмол зардал нэмэх - илгээх өгөгдөл:", {
+        coupleId,
+        amount: parseInt(formData.amount),
+        name: formData.name,
+        description: formData.description,
+      });
+
       const response = await fetch(
         "https://memories-production-1440.up.railway.app/api/finance/fixed-expense",
         {
@@ -301,10 +357,27 @@ export default function Finance({ user, coupleId }) {
           }),
         }
       );
+
+      console.log(
+        "Тогтмол зардал нэмэх - хариу:",
+        response.status,
+        response.statusText
+      );
+
       if (response.ok) {
+        const responseData = await response.json();
+        console.log("Тогтмол зардал нэмэх - амжилттай:", responseData);
         alert("Тогтмол зардал нэмэгдлээ!");
         setModalOpen(false);
         loadFinanceData();
+      } else {
+        const errorData = await response.json();
+        console.error("Тогтмол зардал нэмэх - алдаа:", errorData);
+        alert(
+          `Тогтмол зардал нэмэхэд алдаа гарлаа: ${
+            errorData.message || "Unknown error"
+          }`
+        );
       }
     } catch (error) {
       console.error("Тогтмол зардал нэмэх алдаа:", error);
@@ -314,6 +387,13 @@ export default function Finance({ user, coupleId }) {
 
   const handleAddSavings = async () => {
     try {
+      console.log("Хадгаламж нэмэх - илгээх өгөгдөл:", {
+        coupleId,
+        amount: parseInt(formData.amount),
+        date: formData.date,
+        description: formData.description,
+      });
+
       const response = await fetch(
         "https://memories-production-1440.up.railway.app/api/finance/savings",
         {
@@ -327,10 +407,27 @@ export default function Finance({ user, coupleId }) {
           }),
         }
       );
+
+      console.log(
+        "Хадгаламж нэмэх - хариу:",
+        response.status,
+        response.statusText
+      );
+
       if (response.ok) {
+        const responseData = await response.json();
+        console.log("Хадгаламж нэмэх - амжилттай:", responseData);
         alert("Хадгаламж нэмэгдлээ!");
         setModalOpen(false);
         loadFinanceData();
+      } else {
+        const errorData = await response.json();
+        console.error("Хадгаламж нэмэх - алдаа:", errorData);
+        alert(
+          `Хадгаламж нэмэхэд алдаа гарлаа: ${
+            errorData.message || "Unknown error"
+          }`
+        );
       }
     } catch (error) {
       console.error("Хадгаламж нэмэх алдаа:", error);
@@ -390,7 +487,7 @@ export default function Finance({ user, coupleId }) {
     <>
       <BG />
       <Container>
-        <Title>💰 Бидний мөнгөн хэрэг</Title>
+        <Title>💰 Бидний Санхүү</Title>
 
         {/* 목표 현황 */}
         <Card
@@ -573,7 +670,15 @@ export default function Finance({ user, coupleId }) {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
               >
-                <h3 style={{ marginBottom: "1em", color: "#ff7eb9" }}>
+                <h3
+                  style={{
+                    marginBottom: "1em",
+                    color: "#ff7eb9",
+                    fontSize: "1.2rem",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                  }}
+                >
                   {modalType === "goal"
                     ? "🎯 Зорилго тохируулах"
                     : modalType === "income"
@@ -728,7 +833,15 @@ export default function Finance({ user, coupleId }) {
                   </>
                 )}
 
-                <ButtonGroup>
+                <ButtonGroup
+                  style={{
+                    display: "flex",
+                    gap: "0.8em",
+                    marginTop: "1.5em",
+                    flexWrap: "wrap",
+                    justifyContent: "center",
+                  }}
+                >
                   <AddButton
                     onClick={
                       modalType === "goal"
@@ -739,10 +852,21 @@ export default function Finance({ user, coupleId }) {
                         ? handleAddFixedExpense
                         : handleAddSavings
                     }
+                    style={{
+                      minWidth: "120px",
+                      padding: "0.8em 1.5em",
+                    }}
                   >
                     Хадгалах
                   </AddButton>
-                  <AddButton onClick={() => setModalOpen(false)}>
+                  <AddButton
+                    onClick={() => setModalOpen(false)}
+                    style={{
+                      minWidth: "120px",
+                      padding: "0.8em 1.5em",
+                      background: "#ccc",
+                    }}
+                  >
                     Цуцлах
                   </AddButton>
                 </ButtonGroup>

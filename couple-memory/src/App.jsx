@@ -110,10 +110,10 @@ function App() {
           />
         </Routes>
         <Nav>
-          <NavItem to="/">홈</NavItem>
-          <NavItem to="/album">앨범</NavItem>
-          <NavItem to="/planner">플래너</NavItem>
-          <NavItem to="/finance">금융관리</NavItem>
+          <NavItem to="/">Home</NavItem>
+          <NavItem to="/album">Album</NavItem>
+          <NavItem to="/planner">Planner</NavItem>
+          <NavItem to="/finance">Finance</NavItem>
         </Nav>
       </>
     );
