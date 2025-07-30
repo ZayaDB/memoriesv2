@@ -128,73 +128,6 @@ const CloseBtn = styled.button`
   cursor: pointer;
 `;
 
-// 다운로드 다이얼로그 스타일
-const DownloadDialog = styled(motion.div)`
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  border-radius: 20px;
-  padding: 1.5em;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  z-index: 10001;
-  text-align: center;
-  max-width: 90vw;
-  width: 320px;
-  max-height: 80vh;
-  overflow-y: auto;
-
-  @media (max-width: 480px) {
-    width: 90vw;
-    max-width: 300px;
-    padding: 1.2em;
-    margin: 20px;
-  }
-`;
-
-const DownloadButton = styled.button`
-  background: ${({ theme }) => theme.colors.primary};
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 0.8em 1.5em;
-  font-size: 1rem;
-  cursor: pointer;
-  margin: 0.3em;
-  font-family: ${({ theme }) => theme.font.cute};
-  min-width: 100px;
-
-  &:hover {
-    background: #ffb3d1;
-  }
-
-  @media (max-width: 480px) {
-    padding: 0.7em 1.2em;
-    font-size: 0.9rem;
-    margin: 0.2em;
-  }
-`;
-
-const CancelButton = styled.button`
-  background: #ccc;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 0.8em 1.5em;
-  font-size: 1rem;
-  cursor: pointer;
-  margin: 0.3em;
-  font-family: ${({ theme }) => theme.font.cute};
-  min-width: 100px;
-
-  @media (max-width: 480px) {
-    padding: 0.7em 1.2em;
-    font-size: 0.9rem;
-    margin: 0.2em;
-  }
-`;
-
 const CommentBox = styled.div`
   width: 100%;
   margin-top: 1em;
@@ -728,10 +661,21 @@ export default function Album() {
         <AnimatePresence>
           {downloadDialog.show && (
             <ModalOverlay>
-              <DownloadDialog
+              <ModalContent
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
+                style={{
+                  background: "white",
+                  borderRadius: "20px",
+                  padding: "1.5em",
+                  width: "100%",
+                  maxWidth: "400px",
+                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
+                  maxHeight: "80vh",
+                  overflowY: "auto",
+                  textAlign: "center",
+                }}
               >
                 <h3
                   style={{
@@ -759,9 +703,10 @@ export default function Album() {
                     gap: "0.8em",
                     justifyContent: "center",
                     flexWrap: "wrap",
+                    marginTop: "1.5em",
                   }}
                 >
-                  <DownloadButton
+                  <CuteButton
                     onClick={() => {
                       downloadImage(
                         downloadDialog.imageUrl,
@@ -773,10 +718,14 @@ export default function Album() {
                         imageName: "",
                       });
                     }}
+                    style={{
+                      minWidth: "120px",
+                      padding: "0.8em 1.5em",
+                    }}
                   >
                     💾 Хадгалах
-                  </DownloadButton>
-                  <CancelButton
+                  </CuteButton>
+                  <CuteButton
                     onClick={() =>
                       setDownloadDialog({
                         show: false,
@@ -784,11 +733,16 @@ export default function Album() {
                         imageName: "",
                       })
                     }
+                    style={{
+                      minWidth: "120px",
+                      padding: "0.8em 1.5em",
+                      background: "#ccc",
+                    }}
                   >
                     Цуцлах
-                  </CancelButton>
+                  </CuteButton>
                 </div>
-              </DownloadDialog>
+              </ModalContent>
             </ModalOverlay>
           )}
         </AnimatePresence>
