@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Home from "./pages/Home";
 import Album from "./pages/Album";
 import Planner from "./pages/Planner";
-import BucketList from "./pages/BucketList";
+import Finance from "./pages/Finance";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import InvitePage from "./pages/InvitePage";
@@ -100,7 +100,10 @@ function App() {
           />
           <Route path="/album" element={<Album />} />
           <Route path="/planner" element={<Planner />} />
-          <Route path="/bucketlist" element={<BucketList />} />
+          <Route
+            path="/finance"
+            element={<Finance user={user} coupleId={user.coupleId} />}
+          />
           <Route
             path="/settings"
             element={<Settings coupleId={user.coupleId} onSave />}
@@ -110,7 +113,7 @@ function App() {
           <NavItem to="/">홈</NavItem>
           <NavItem to="/album">앨범</NavItem>
           <NavItem to="/planner">플래너</NavItem>
-          <NavItem to="/bucketlist">버킷리스트</NavItem>
+          <NavItem to="/finance">금융관리</NavItem>
         </Nav>
       </>
     );

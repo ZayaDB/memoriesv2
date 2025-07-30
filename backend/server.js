@@ -9,6 +9,7 @@ const planRouter = require("./routes/plan");
 const bucketListRouter = require("./routes/bucketlist");
 const authRouter = require("./routes/auth");
 const coupleRouter = require("./routes/couple");
+const financeRouter = require("./routes/finance");
 
 dotenv.config();
 
@@ -56,6 +57,7 @@ app.use("/api/plans", planRouter);
 app.use("/api/bucketlist", bucketListRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/couple", coupleRouter);
+app.use("/api/finance", financeRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
