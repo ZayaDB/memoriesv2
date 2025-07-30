@@ -8,9 +8,11 @@ router.get("/", async (req, res) => {
   if (!coupleId) return res.json({});
 
   try {
+    console.log("Finance 조회 요청:", coupleId);
     const finance = await Finance.findOne({ coupleId });
     if (!finance) {
       // 초기 데이터 생성
+      console.log("새로운 Finance 데이터 생성");
       const newFinance = await Finance.create({
         coupleId,
         monthlyIncome: 0,
@@ -23,9 +25,11 @@ router.get("/", async (req, res) => {
       });
       return res.json(newFinance);
     }
+    console.log("기존 Finance 데이터 반환");
     res.json(finance);
   } catch (error) {
-    res.status(500).json({ error: "데이터 조회 실패" });
+    console.error("Finance 조회 에러:", error);
+    res.status(500).json({ error: "데이터 조회 실패", details: error.message });
   }
 });
 

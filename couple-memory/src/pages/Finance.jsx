@@ -263,21 +263,35 @@ export default function Finance({ user, coupleId }) {
   };
 
   const handleAddExpense = async () => {
+    console.log("지출 추가 시작:", { coupleId, formData });
+
+    if (!formData.amount || !formData.category) {
+      alert("금액과 카테고리를 입력해주세요.");
+      return;
+    }
+
     try {
+      const requestBody = {
+        coupleId,
+        amount: Number(formData.amount),
+        category: formData.category,
+        description: formData.description,
+        date: formData.date,
+      };
+
+      console.log("요청 데이터:", requestBody);
+
       const response = await fetch(`${API_BASE}/api/finance/expense`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          coupleId,
-          amount: Number(formData.amount),
-          category: formData.category,
-          description: formData.description,
-          date: formData.date,
-        }),
+        body: JSON.stringify(requestBody),
       });
+
+      console.log("응답 상태:", response.status);
 
       if (response.ok) {
         const updatedData = await response.json();
+        console.log("업데이트된 데이터:", updatedData);
         setFinanceData(updatedData);
         setShowModal(false);
         setFormData({
@@ -286,9 +300,15 @@ export default function Finance({ user, coupleId }) {
           description: "",
           date: new Date().toISOString().split("T")[0],
         });
+        alert("지출이 추가되었습니다!");
+      } else {
+        const errorData = await response.json();
+        console.error("서버 에러:", errorData);
+        alert(`지출 추가 실패: ${errorData.error || "알 수 없는 오류"}`);
       }
     } catch (error) {
       console.error("지출 추가 실패:", error);
+      alert("지출 추가 중 오류가 발생했습니다.");
     }
   };
 
