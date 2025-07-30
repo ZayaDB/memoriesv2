@@ -219,6 +219,8 @@ export default function Finance({ user, coupleId }) {
   const [modalType, setModalType] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({});
+  const [editMode, setEditMode] = useState(false);
+  const [editItem, setEditItem] = useState(null);
 
   useEffect(() => {
     if (coupleId) {
@@ -435,36 +437,245 @@ export default function Finance({ user, coupleId }) {
     }
   };
 
-  const openModal = (type) => {
+  // 수정 함수들
+  const handleEditGoal = async () => {
+    try {
+      const response = await fetch(
+        "https://memories-production-1440.up.railway.app/api/finance/goal",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            coupleId,
+            targetAmount: parseInt(formData.targetAmount),
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+          }),
+        }
+      );
+      if (response.ok) {
+        alert("Зорилго шинэчлэгдлээ!");
+        setModalOpen(false);
+        setEditMode(false);
+        setEditItem(null);
+        loadFinanceData();
+      }
+    } catch (error) {
+      console.error("Зорилго шинэчлэх алдаа:", error);
+      alert("Зорилго шинэчлэхэд алдаа гарлаа.");
+    }
+  };
+
+  const handleEditIncome = async () => {
+    try {
+      const response = await fetch(
+        `https://memories-production-1440.up.railway.app/api/finance/income/${editItem._id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            coupleId,
+            amount: parseInt(formData.amount),
+            category: formData.category,
+            name: formData.name,
+            date: formData.date,
+            description: formData.description,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        alert("Орлого шинэчлэгдлээ!");
+        setModalOpen(false);
+        setEditMode(false);
+        setEditItem(null);
+        loadFinanceData();
+      } else {
+        const errorData = await response.json();
+        alert(
+          `Орлого шинэчлэхэд алдаа гарлаа: ${
+            errorData.message || "Unknown error"
+          }`
+        );
+      }
+    } catch (error) {
+      console.error("Орлого шинэчлэх алдаа:", error);
+      alert("Орлого шинэчлэхэд алдаа гарлаа.");
+    }
+  };
+
+  const handleEditFixedExpense = async () => {
+    try {
+      const response = await fetch(
+        `https://memories-production-1440.up.railway.app/api/finance/fixed-expense/${editItem._id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            coupleId,
+            amount: parseInt(formData.amount),
+            name: formData.name,
+            description: formData.description,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        alert("Тогтмол зардал шинэчлэгдлээ!");
+        setModalOpen(false);
+        setEditMode(false);
+        setEditItem(null);
+        loadFinanceData();
+      } else {
+        const errorData = await response.json();
+        alert(
+          `Тогтмол зардал шинэчлэхэд алдаа гарлаа: ${
+            errorData.message || "Unknown error"
+          }`
+        );
+      }
+    } catch (error) {
+      console.error("Тогтмол зардал шинэчлэх алдаа:", error);
+      alert("Тогтмол зардал шинэчлэхэд алдаа гарлаа.");
+    }
+  };
+
+  const handleEditSavings = async () => {
+    try {
+      const response = await fetch(
+        `https://memories-production-1440.up.railway.app/api/finance/savings/${editItem._id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            coupleId,
+            amount: parseInt(formData.amount),
+            date: formData.date,
+            description: formData.description,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        alert("Хадгаламж шинэчлэгдлээ!");
+        setModalOpen(false);
+        setEditMode(false);
+        setEditItem(null);
+        loadFinanceData();
+      } else {
+        const errorData = await response.json();
+        alert(
+          `Хадгаламж шинэчлэхэд алдаа гарлаа: ${
+            errorData.message || "Unknown error"
+          }`
+        );
+      }
+    } catch (error) {
+      console.error("Хадгаламж шинэчлэх алдаа:", error);
+      alert("Хадгаламж шинэчлэхэд алдаа гарлаа.");
+    }
+  };
+
+  const openModal = (type, item = null) => {
     setModalType(type);
     setModalOpen(true);
+    setEditMode(!!item);
+    setEditItem(item);
+
     if (type === "goal") {
-      setFormData({
-        targetAmount: "",
-        startDate: "",
-        endDate: "",
-      });
+      if (item) {
+        // 수정 모드
+        setFormData({
+          targetAmount: item.targetAmount?.toString() || "",
+          startDate: item.startDate
+            ? new Date(item.startDate).toISOString().split("T")[0]
+            : "",
+          endDate: item.endDate
+            ? new Date(item.endDate).toISOString().split("T")[0]
+            : "",
+        });
+      } else {
+        // 새로 추가 모드
+        setFormData({
+          targetAmount: "",
+          startDate: "",
+          endDate: "",
+        });
+      }
     } else if (type === "income") {
-      setFormData({
-        amount: "",
-        category: "salary",
-        name: "",
-        date: new Date().toISOString().split("T")[0],
-        description: "",
-      });
+      if (item) {
+        // 수정 모드
+        setFormData({
+          amount: item.amount?.toString() || "",
+          category: item.category || "salary",
+          name: item.name || "",
+          date: item.date
+            ? new Date(item.date).toISOString().split("T")[0]
+            : new Date().toISOString().split("T")[0],
+          description: item.description || "",
+        });
+      } else {
+        // 새로 추가 모드
+        setFormData({
+          amount: "",
+          category: "salary",
+          name: "",
+          date: new Date().toISOString().split("T")[0],
+          description: "",
+        });
+      }
     } else if (type === "fixed-expense") {
-      setFormData({
-        amount: "",
-        name: "",
-        description: "",
-      });
+      if (item) {
+        // 수정 모드
+        setFormData({
+          amount: item.amount?.toString() || "",
+          name: item.name || "",
+          description: item.description || "",
+        });
+      } else {
+        // 새로 추가 모드
+        setFormData({
+          amount: "",
+          name: "",
+          description: "",
+        });
+      }
     } else if (type === "savings") {
-      setFormData({
-        amount: "",
-        date: new Date().toISOString().split("T")[0],
-        description: "",
-      });
+      if (item) {
+        // 수정 모드
+        setFormData({
+          amount: item.amount?.toString() || "",
+          date: item.date
+            ? new Date(item.date).toISOString().split("T")[0]
+            : new Date().toISOString().split("T")[0],
+          description: item.description || "",
+        });
+      } else {
+        // 새로 추가 모드
+        setFormData({
+          amount: "",
+          date: new Date().toISOString().split("T")[0],
+          description: "",
+        });
+      }
     }
+  };
+
+  // 수정 버튼 클릭 핸들러들
+  const handleEditGoalClick = () => {
+    openModal("goal", financeData.goal);
+  };
+
+  const handleEditIncomeClick = (income) => {
+    openModal("income", income);
+  };
+
+  const handleEditFixedExpenseClick = (expense) => {
+    openModal("fixed-expense", expense);
+  };
+
+  const handleEditSavingsClick = (saving) => {
+    openModal("savings", saving);
   };
 
   const getRemainingDays = () => {
@@ -523,6 +734,18 @@ export default function Finance({ user, coupleId }) {
               >
                 {getRemainingDays()} хоног үлдлээ
               </div>
+              <div style={{ textAlign: "center", marginTop: "1em" }}>
+                <AddButton
+                  onClick={handleEditGoalClick}
+                  style={{
+                    background: "#ffb3d1",
+                    fontSize: "0.9rem",
+                    padding: "0.5em 1em",
+                  }}
+                >
+                  ✏️ Засах
+                </AddButton>
+              </div>
             </>
           ) : (
             <div style={{ textAlign: "center", color: "#666" }}>
@@ -553,6 +776,70 @@ export default function Finance({ user, coupleId }) {
               </StatValue>
             </StatItem>
           </StatGrid>
+
+          {/* 수익 리스트 */}
+          {financeData.incomes && financeData.incomes.length > 0 && (
+            <div style={{ marginTop: "1em" }}>
+              <h4
+                style={{
+                  fontSize: "1rem",
+                  color: "#666",
+                  marginBottom: "0.5em",
+                }}
+              >
+                Орлогын жагсаалт:
+              </h4>
+              {financeData.incomes.map((income, index) => (
+                <div
+                  key={income._id || index}
+                  style={{
+                    background: "#f8f9fa",
+                    padding: "0.8em",
+                    borderRadius: "8px",
+                    marginBottom: "0.5em",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: "bold", color: "#4CAF50" }}>
+                      {income.name || "Орлого"} -{" "}
+                      {income.amount?.toLocaleString()}₮
+                    </div>
+                    <div style={{ fontSize: "0.8rem", color: "#666" }}>
+                      {income.category} •{" "}
+                      {income.date
+                        ? new Date(income.date).toLocaleDateString("mn-MN")
+                        : ""}
+                    </div>
+                    {income.description && (
+                      <div
+                        style={{
+                          fontSize: "0.8rem",
+                          color: "#888",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {income.description}
+                      </div>
+                    )}
+                  </div>
+                  <AddButton
+                    onClick={() => handleEditIncomeClick(income)}
+                    style={{
+                      background: "#ffb3d1",
+                      fontSize: "0.8rem",
+                      padding: "0.3em 0.8em",
+                      margin: 0,
+                    }}
+                  >
+                    ✏️
+                  </AddButton>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         {/* 고정 지출 현황 */}
@@ -584,6 +871,69 @@ export default function Finance({ user, coupleId }) {
               </StatValue>
             </StatItem>
           </StatGrid>
+
+          {/* 고정 지출 리스트 */}
+          {financeData.fixedExpenses &&
+            financeData.fixedExpenses.length > 0 && (
+              <div style={{ marginTop: "1em" }}>
+                <h4
+                  style={{
+                    fontSize: "1rem",
+                    color: "#666",
+                    marginBottom: "0.5em",
+                  }}
+                >
+                  Зардлын жагсаалт:
+                </h4>
+                {financeData.fixedExpenses.map((expense, index) => (
+                  <div
+                    key={expense._id || index}
+                    style={{
+                      background: "#f8f9fa",
+                      padding: "0.8em",
+                      borderRadius: "8px",
+                      marginBottom: "0.5em",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: "bold", color: "#FF5722" }}>
+                        {expense.name} - {expense.amount?.toLocaleString()}₮
+                      </div>
+                      <div style={{ fontSize: "0.8rem", color: "#666" }}>
+                        {expense.date
+                          ? new Date(expense.date).toLocaleDateString("mn-MN")
+                          : ""}
+                      </div>
+                      {expense.description && (
+                        <div
+                          style={{
+                            fontSize: "0.8rem",
+                            color: "#888",
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {expense.description}
+                        </div>
+                      )}
+                    </div>
+                    <AddButton
+                      onClick={() => handleEditFixedExpenseClick(expense)}
+                      style={{
+                        background: "#ffb3d1",
+                        fontSize: "0.8rem",
+                        padding: "0.3em 0.8em",
+                        margin: 0,
+                      }}
+                    >
+                      ✏️
+                    </AddButton>
+                  </div>
+                ))}
+              </div>
+            )}
         </Card>
 
         {/* 적금 현황 */}
@@ -615,6 +965,68 @@ export default function Finance({ user, coupleId }) {
               </StatValue>
             </StatItem>
           </StatGrid>
+
+          {/* 적금 리스트 */}
+          {financeData.savings && financeData.savings.length > 0 && (
+            <div style={{ marginTop: "1em" }}>
+              <h4
+                style={{
+                  fontSize: "1rem",
+                  color: "#666",
+                  marginBottom: "0.5em",
+                }}
+              >
+                Хадгаламжийн жагсаалт:
+              </h4>
+              {financeData.savings.map((saving, index) => (
+                <div
+                  key={saving._id || index}
+                  style={{
+                    background: "#f8f9fa",
+                    padding: "0.8em",
+                    borderRadius: "8px",
+                    marginBottom: "0.5em",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: "bold", color: "#4CAF50" }}>
+                      Хадгаламж - {saving.amount?.toLocaleString()}₮
+                    </div>
+                    <div style={{ fontSize: "0.8rem", color: "#666" }}>
+                      {saving.date
+                        ? new Date(saving.date).toLocaleDateString("mn-MN")
+                        : ""}
+                    </div>
+                    {saving.description && (
+                      <div
+                        style={{
+                          fontSize: "0.8rem",
+                          color: "#888",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {saving.description}
+                      </div>
+                    )}
+                  </div>
+                  <AddButton
+                    onClick={() => handleEditSavingsClick(saving)}
+                    style={{
+                      background: "#ffb3d1",
+                      fontSize: "0.8rem",
+                      padding: "0.3em 0.8em",
+                      margin: 0,
+                    }}
+                  >
+                    ✏️
+                  </AddButton>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         {/* 액션 버튼들 */}
@@ -844,7 +1256,15 @@ export default function Finance({ user, coupleId }) {
                 >
                   <AddButton
                     onClick={
-                      modalType === "goal"
+                      editMode
+                        ? modalType === "goal"
+                          ? handleEditGoal
+                          : modalType === "income"
+                          ? handleEditIncome
+                          : modalType === "fixed-expense"
+                          ? handleEditFixedExpense
+                          : handleEditSavings
+                        : modalType === "goal"
                         ? handleSetGoal
                         : modalType === "income"
                         ? handleAddIncome
@@ -857,10 +1277,14 @@ export default function Finance({ user, coupleId }) {
                       padding: "0.8em 1.5em",
                     }}
                   >
-                    Хадгалах
+                    {editMode ? "Шинэчлэх" : "Хадгалах"}
                   </AddButton>
                   <AddButton
-                    onClick={() => setModalOpen(false)}
+                    onClick={() => {
+                      setModalOpen(false);
+                      setEditMode(false);
+                      setEditItem(null);
+                    }}
                     style={{
                       minWidth: "120px",
                       padding: "0.8em 1.5em",
