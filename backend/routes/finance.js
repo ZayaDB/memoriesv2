@@ -207,6 +207,169 @@ router.post("/savings", async (req, res) => {
   }
 });
 
+// 수익 수정
+router.patch("/income/:id", async (req, res) => {
+  const { coupleId, amount, category, name, date, description } = req.body;
+  const { id } = req.params;
+
+  if (!coupleId || !amount || !category) {
+    return res
+      .status(400)
+      .json({ error: "커플ID, 금액, 카테고리가 필요합니다" });
+  }
+
+  try {
+    const finance = await Finance.findOne({ coupleId });
+    if (!finance) {
+      return res.status(404).json({ error: "데이터를 찾을 수 없습니다" });
+    }
+
+    const incomeIndex = finance.incomes.findIndex(
+      (inc) => inc._id.toString() === id
+    );
+    if (incomeIndex === -1) {
+      return res.status(404).json({ error: "수익을 찾을 수 없습니다" });
+    }
+
+    // 수익 업데이트
+    finance.incomes[incomeIndex] = {
+      ...finance.incomes[incomeIndex],
+      amount: Number(amount),
+      category: category,
+      name: name || "",
+      date: date ? new Date(date) : new Date(),
+      description: description || "",
+    };
+
+    // 이번달 수익 재계산
+    const now = new Date();
+    finance.monthlyIncome = finance.incomes
+      .filter((inc) => {
+        const incDate = new Date(inc.date);
+        return (
+          incDate.getMonth() === now.getMonth() &&
+          incDate.getFullYear() === now.getFullYear()
+        );
+      })
+      .reduce((sum, inc) => sum + inc.amount, 0);
+
+    finance.calculateAvailableSavings();
+    await finance.save();
+    res.json(finance);
+  } catch (error) {
+    console.error("수익 수정 에러:", error);
+    res.status(500).json({ error: "수익 수정 실패" });
+  }
+});
+
+// 고정 지출 수정
+router.patch("/fixed-expense/:id", async (req, res) => {
+  const { coupleId, name, amount, description } = req.body;
+  const { id } = req.params;
+
+  if (!coupleId || !name || !amount) {
+    return res.status(400).json({ error: "커플ID, 지출명, 금액이 필요합니다" });
+  }
+
+  try {
+    const finance = await Finance.findOne({ coupleId });
+    if (!finance) {
+      return res.status(404).json({ error: "데이터를 찾을 수 없습니다" });
+    }
+
+    const expenseIndex = finance.fixedExpenses.findIndex(
+      (exp) => exp._id.toString() === id
+    );
+    if (expenseIndex === -1) {
+      return res.status(404).json({ error: "고정 지출을 찾을 수 없습니다" });
+    }
+
+    // 고정 지출 업데이트
+    finance.fixedExpenses[expenseIndex] = {
+      ...finance.fixedExpenses[expenseIndex],
+      name: name,
+      amount: Number(amount),
+      description: description || "",
+    };
+
+    // 이번달 고정 지출 재계산
+    const now = new Date();
+    finance.monthlyFixedExpense = finance.fixedExpenses
+      .filter((exp) => {
+        const expDate = new Date(exp.date);
+        return (
+          expDate.getMonth() === now.getMonth() &&
+          expDate.getFullYear() === now.getFullYear()
+        );
+      })
+      .reduce((sum, exp) => sum + exp.amount, 0);
+
+    finance.calculateAvailableSavings();
+    await finance.save();
+    res.json(finance);
+  } catch (error) {
+    console.error("고정 지출 수정 에러:", error);
+    res.status(500).json({ error: "고정 지출 수정 실패" });
+  }
+});
+
+// 적금 수정
+router.patch("/savings/:id", async (req, res) => {
+  const { coupleId, amount, date, description } = req.body;
+  const { id } = req.params;
+
+  if (!coupleId || !amount) {
+    return res.status(400).json({ error: "커플ID와 금액이 필요합니다" });
+  }
+
+  try {
+    const finance = await Finance.findOne({ coupleId });
+    if (!finance) {
+      return res.status(404).json({ error: "데이터를 찾을 수 없습니다" });
+    }
+
+    const savingIndex = finance.savings.findIndex(
+      (sav) => sav._id.toString() === id
+    );
+    if (savingIndex === -1) {
+      return res.status(404).json({ error: "적금을 찾을 수 없습니다" });
+    }
+
+    // 적금 업데이트
+    finance.savings[savingIndex] = {
+      ...finance.savings[savingIndex],
+      amount: Number(amount),
+      date: date ? new Date(date) : new Date(),
+      description: description || "",
+    };
+
+    // 이번달 적금 재계산
+    const now = new Date();
+    finance.monthlySavings = finance.savings
+      .filter((sav) => {
+        const savDate = new Date(sav.date);
+        return (
+          savDate.getMonth() === now.getMonth() &&
+          savDate.getFullYear() === now.getFullYear()
+        );
+      })
+      .reduce((sum, sav) => sum + sav.amount, 0);
+
+    // 총 적금 재계산
+    finance.totalSavings = finance.savings.reduce(
+      (sum, sav) => sum + sav.amount,
+      0
+    );
+
+    finance.calculateGoalProgress();
+    await finance.save();
+    res.json(finance);
+  } catch (error) {
+    console.error("적금 수정 에러:", error);
+    res.status(500).json({ error: "적금 수정 실패" });
+  }
+});
+
 // 수익/고정지출/적금 삭제
 router.delete("/:type/:id", async (req, res) => {
   const { coupleId } = req.query;
