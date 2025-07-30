@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import styled from "styled-components";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 const BG = styled.div`
   min-height: 100vh;
