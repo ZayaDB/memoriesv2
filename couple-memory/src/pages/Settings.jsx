@@ -129,7 +129,7 @@ export default function Settings({ coupleId, onSave }) {
     setMessage("");
     setError("");
     if (!coupleId) {
-      setError("커플 정보가 올바르지 않습니다. 다시 로그인해 주세요.");
+      setError("Хосуудын мэдээлэл буруу байна. Дахин нэвтэрнэ үү.");
       setLoading(false);
       return;
     }
@@ -141,13 +141,13 @@ export default function Settings({ coupleId, onSave }) {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage("커플 정보가 저장되었습니다!");
+        setMessage("Хосуудын мэдээлэл хадгалагдлаа!");
         if (onSave) setTimeout(onSave, 800);
       } else {
-        setError(data.message || "저장에 실패했습니다.");
+        setError(data.message || "Хадгалахад алдаа гарлаа.");
       }
     } catch (err) {
-      setError("서버 오류가 발생했습니다.");
+      setError("Серверийн алдаа гарлаа.");
     } finally {
       setLoading(false);
     }
@@ -158,12 +158,12 @@ export default function Settings({ coupleId, onSave }) {
       <BG />
       <Center>
         <Card>
-          <Title>커플 정보 설정</Title>
+          <Title>Хосуудын мэдээлэл тохируулах</Title>
           <Form onSubmit={handleSubmit}>
             <Input
               type="text"
               name="name"
-              placeholder="커플 이름 (예: ZAYA & ENKHJIN)"
+              placeholder="Хосуудын нэр (жишээ: ZAYA & ENKHJIN)"
               value={form.name}
               onChange={handleChange}
               required
@@ -177,19 +177,19 @@ export default function Settings({ coupleId, onSave }) {
                 fontSize: "1em",
               }}
             >
-              사귄 날짜
+              Танилцсан огноо
             </label>
             <Input
               type="date"
               name="startDate"
-              placeholder="사귄 날짜 (필수)"
+              placeholder="Танилцсан огноо (заавал)"
               value={form.startDate}
               onChange={handleChange}
               required
             />
 
             <Button type="submit" disabled={loading || !coupleId}>
-              {loading ? "저장 중..." : "저장하기"}
+              {loading ? "Хадгалж байна..." : "Хадгалах"}
             </Button>
           </Form>
           {message && (
@@ -229,7 +229,7 @@ export default function Settings({ coupleId, onSave }) {
             textDecoration: "underline",
           }}
         >
-          로그아웃
+          Гарах
         </button>
       </div>
     </>

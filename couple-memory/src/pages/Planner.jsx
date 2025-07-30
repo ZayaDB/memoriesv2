@@ -168,7 +168,7 @@ const CheckboxLabel = styled.label`
 function formatDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
-  return d.toLocaleDateString("ko-KR", {
+  return d.toLocaleDateString("mn-MN", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -268,7 +268,7 @@ export default function Planner() {
   };
 
   const handleDelete = async (planId) => {
-    if (!window.confirm("정말 삭제할까요?")) return;
+    if (!window.confirm("Устгахдаа итгэлтэй байна уу?")) return;
     await fetch(`${API_URL}/${planId}`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -335,27 +335,25 @@ export default function Planner() {
           ))}
         </AnimatePresence>
         <TopIcon>✈️</TopIcon>
-        <Title>Planner</Title>
-        <Guide>
-          우리의 특별한 날과 여행을 함께 계획해보자! ✅ 완료 체크도 가능해요!
-        </Guide>
+        <Title>Төлөвлөгөө</Title>
+        <Guide>Бидний онцгой өдрүүд болон аяллыг хамт төлөвлөе! ✅</Guide>
         <AddForm onSubmit={handleAdd}>
           <Input
             name="title"
-            placeholder="제목 (예: 일본 여행)"
+            placeholder="Гарчиг (жишээ: Япон аялал)"
             value={form.title}
             onChange={handleChange}
             required
           />
           <Input
             name="description"
-            placeholder="메모/계획"
+            placeholder="Тэмдэглэл/Төлөвлөгөө"
             value={form.description}
             onChange={handleChange}
           />
           <Input
             name="place"
-            placeholder="장소 (예: 오사카)"
+            placeholder="Газрын нэр (жишээ: Осака)"
             value={form.place}
             onChange={handleChange}
           />
@@ -377,17 +375,17 @@ export default function Planner() {
             />
           </div>
           <Select name="type" value={form.type} onChange={handleChange}>
-            <option value="trip">여행</option>
-            <option value="anniversary">기념일</option>
-            <option value="date">데이트</option>
-            <option value="etc">기타</option>
+            <option value="trip">Аялал</option>
+            <option value="anniversary">Ойн өдөр</option>
+            <option value="date">Уулзалт</option>
+            <option value="etc">Бусад</option>
           </Select>
           <AddBtn type="submit" whileTap={{ scale: 1.1 }}>
-            추가
+            Нэмэх
           </AddBtn>
         </AddForm>
         {loading ? (
-          <div>로딩 중...</div>
+          <div>Уншиж байна...</div>
         ) : (
           <List>
             {plans.map((p, i) => (
@@ -413,7 +411,7 @@ export default function Planner() {
                   </span>
                   <span style={{ fontWeight: 600 }}>{p.title}</span>
                   {p.place && <Place>@{p.place}</Place>}
-                  {p.done && <DoneBadge>완료!</DoneBadge>}
+                  {p.done && <DoneBadge>Дууссан!</DoneBadge>}
                 </div>
                 <DateText>
                   {formatDate(p.startDate)}
@@ -432,7 +430,7 @@ export default function Planner() {
                     checked={p.done || false}
                     onChange={() => handleToggleComplete(p._id, p.done)}
                   />
-                  완료했어요!
+                  Дуусгасан!
                 </CheckboxLabel>
 
                 {/* 수정 모드 */}
@@ -440,20 +438,20 @@ export default function Planner() {
                   <EditForm>
                     <Input
                       name="title"
-                      placeholder="제목"
+                      placeholder="Гарчиг"
                       value={editForm.title}
                       onChange={handleEditChange}
                       required
                     />
                     <Input
                       name="description"
-                      placeholder="메모/계획"
+                      placeholder="Тэмдэглэл/Төлөвлөгөө"
                       value={editForm.description}
                       onChange={handleEditChange}
                     />
                     <Input
                       name="place"
-                      placeholder="장소"
+                      placeholder="Газрын нэр"
                       value={editForm.place}
                       onChange={handleEditChange}
                     />
@@ -479,10 +477,10 @@ export default function Planner() {
                       value={editForm.type}
                       onChange={handleEditChange}
                     >
-                      <option value="trip">여행</option>
-                      <option value="anniversary">기념일</option>
-                      <option value="date">데이트</option>
-                      <option value="etc">기타</option>
+                      <option value="trip">Аялал</option>
+                      <option value="anniversary">Ойн өдөр</option>
+                      <option value="date">Уулзалт</option>
+                      <option value="etc">Бусад</option>
                     </Select>
                     <ActionButtons>
                       <ActionButton
@@ -491,7 +489,7 @@ export default function Planner() {
                         onClick={() => handleEdit(p._id)}
                         whileTap={{ scale: 1.1 }}
                       >
-                        💾 저장
+                        💾 Хадгалах
                       </ActionButton>
                       <ActionButton
                         type="button"
@@ -509,7 +507,7 @@ export default function Planner() {
                         }}
                         whileTap={{ scale: 1.1 }}
                       >
-                        ❌ 취소
+                        ❌ Цуцлах
                       </ActionButton>
                     </ActionButtons>
                   </EditForm>
@@ -522,7 +520,7 @@ export default function Planner() {
                       onClick={() => startEdit(p)}
                       whileTap={{ scale: 1.1 }}
                     >
-                      ✏️ 수정
+                      ✏️ Засах
                     </ActionButton>
                     <ActionButton
                       type="button"
@@ -530,7 +528,7 @@ export default function Planner() {
                       onClick={() => handleDelete(p._id)}
                       whileTap={{ scale: 1.1 }}
                     >
-                      🗑️ 삭제
+                      🗑️ Устгах
                     </ActionButton>
                   </ActionButtons>
                 )}
@@ -538,7 +536,7 @@ export default function Planner() {
             ))}
           </List>
         )}
-        <MenuGuide>하단 메뉴에서 다른 추억도 확인해보세요!</MenuGuide>
+        <MenuGuide>Доод цэснээс бусад дурсамжуудыг харна уу!</MenuGuide>
       </Container>
     </>
   );

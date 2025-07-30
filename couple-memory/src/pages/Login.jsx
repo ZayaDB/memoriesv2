@@ -121,15 +121,15 @@ const Login = ({ coupleId, onLogin }) => {
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        setMessage("로그인 성공! 환영합니다.");
+        setMessage("Амжилттай нэвтэрлээ! Тавтай морил!");
         setEmail("");
         setPassword("");
         if (onLogin) onLogin({ ...data.user, token: data.token });
       } else {
-        setError(data.message || "로그인에 실패했습니다.");
+        setError(data.message || "Нэвтрэхэд алдаа гарлаа.");
       }
     } catch (err) {
-      setError("서버 오류가 발생했습니다.");
+      setError("Серверийн алдаа гарлаа.");
     } finally {
       setLoading(false);
     }
@@ -143,8 +143,8 @@ const Login = ({ coupleId, onLogin }) => {
           <span style={{ fontSize: "2.5em", marginBottom: "0.2em" }}>
             🐻‍❄️💖🐰
           </span>
-          <Title>커플 추억앱</Title>
-          <Sub>다시 오신 걸 환영해요!</Sub>
+          <Title>Хосуудын дурсамжийн апп</Title>
+          <Sub>Дахин ирсэнд тавтай морил!</Sub>
           <div style={{ fontSize: "2em", marginBottom: "1em" }}>💗</div>
           <h2
             style={{
@@ -154,12 +154,12 @@ const Login = ({ coupleId, onLogin }) => {
               marginBottom: "1.2em",
             }}
           >
-            로그인
+            Нэвтрэх
           </h2>
           <Form onSubmit={handleSubmit}>
             <Input
               type="email"
-              placeholder="이메일을 입력하세요"
+              placeholder="И-мэйл хаягаа оруулна уу"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -167,14 +167,14 @@ const Login = ({ coupleId, onLogin }) => {
             />
             <Input
               type="password"
-              placeholder="비밀번호를 입력하세요"
+              placeholder="Нууц үгийг оруулна уу"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
             />
             <Button type="submit" disabled={loading}>
-              {loading ? "로그인 중..." : "로그인"}
+              {loading ? "Нэвтэрч байна..." : "Нэвтрэх"}
             </Button>
           </Form>
           <div
@@ -187,7 +187,7 @@ const Login = ({ coupleId, onLogin }) => {
               marginTop: 24,
             }}
           >
-            <span style={{ color: "#ffb3d1" }}>아직 회원이 아니신가요?</span>
+            <span style={{ color: "#ffb3d1" }}>Одоогоор гишүүн биш үү?</span>
             <Link
               to="/register"
               style={{
@@ -196,7 +196,7 @@ const Login = ({ coupleId, onLogin }) => {
                 textDecoration: "underline",
               }}
             >
-              회원가입
+              Бүртгүүлэх
             </Link>
           </div>
           {message && (
@@ -215,7 +215,7 @@ const Login = ({ coupleId, onLogin }) => {
           )}
         </Card>
       </Center>
-      <Guide>하단 메뉴에서 다른 추억도 확인해보세요!</Guide>
+      <Guide>Доод цэснээс бусад дурсамжуудыг харна уу!</Guide>
     </>
   );
 };

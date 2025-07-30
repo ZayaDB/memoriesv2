@@ -319,9 +319,11 @@ function CommentSection({ postId }) {
     <CommentBox>
       <CommentList>
         {loading ? (
-          "댓글 불러오는 중..."
+          "Сэтгэгдэл уншиж байна..."
         ) : comments.length === 0 ? (
-          <span style={{ color: "#bbb" }}>아직 댓글이 없어요</span>
+          <span style={{ color: "#bbb" }}>
+            Одоогоор сэтгэгдэл байхгүй байна
+          </span>
         ) : (
           comments.map((c, i) => (
             <CommentItem key={c._id}>
@@ -336,13 +338,13 @@ function CommentSection({ postId }) {
       <CommentForm onSubmit={handleSubmit}>
         <CommentInput
           type="text"
-          placeholder="댓글 달기..."
+          placeholder="Сэтгэгдэл бичих..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={sending}
         />
         <CommentBtn type="submit" disabled={sending || !input.trim()}>
-          등록
+          Оруулах
         </CommentBtn>
       </CommentForm>
     </CommentBox>
@@ -389,7 +391,7 @@ export default function Album() {
     fetch(`${API_URL}?coupleId=${coupleId}`)
       .then((res) => res.json())
       .then((data) => setPhotos(data))
-      .catch(() => setError("사진 목록을 불러오지 못했어요."));
+      .catch(() => setError("Зургийн жагсаалтыг уншиж чадсангүй."));
   }, [loading, coupleId]);
 
   useEffect(() => {
@@ -425,10 +427,10 @@ export default function Album() {
       // 메모리 정리
       window.URL.revokeObjectURL(url);
 
-      alert("이미지가 저장되었습니다! 📱");
+      alert("Зураг хадгалагдлаа! 📱");
     } catch (error) {
-      console.error("다운로드 실패:", error);
-      alert("다운로드에 실패했습니다. 다시 시도해주세요.");
+      console.error("Татаж авахад алдаа:", error);
+      alert("Татаж авахад алдаа гарлаа. Дахин оролдоно уу.");
     }
   };
 
@@ -459,7 +461,7 @@ export default function Album() {
     e.preventDefault();
     setError("");
     if (!files.length) {
-      setError("사진 파일을 선택해 주세요!");
+      setError("Зургийн файл сонгоно уу!");
       return;
     }
     setLoading(true);
@@ -480,13 +482,13 @@ export default function Album() {
         method: "POST",
         body: formData,
       });
-      if (!res.ok) throw new Error("업로드 실패");
-      alert("사진이 업로드됐어요!");
+      if (!res.ok) throw new Error("Оруулахад алдаа");
+      alert("Зураг амжилттай оруулагдлаа!");
       setFiles([]);
       setCaption("");
       popHeart();
     } catch (err) {
-      setError("업로드에 실패했어요. 다시 시도해 주세요.");
+      setError("Оруулахад алдаа гарлаа. Дахин оролдоно уу.");
     } finally {
       setLoading(false);
     }
@@ -517,8 +519,8 @@ export default function Album() {
           ))}
         </AnimatePresence>
         <TopIcon>📸</TopIcon>
-        <Title>추억 앨범</Title>
-        <Guide>우리 추억을 남겨보자! 📱 길게 누르면 저장할 수 있어요!</Guide>
+        <Title>Дурсамжийн цомог</Title>
+        <Guide>Нандин дурсамж аа үлдээе! 📱</Guide>
         <Form onSubmit={handleSubmit}>
           <Input
             type="file"
@@ -528,7 +530,7 @@ export default function Album() {
           />
           <Input
             type="text"
-            placeholder="사진 설명(캡션)"
+            placeholder="Зургийн тайлбар (гарчиг)"
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
           />
@@ -537,7 +539,7 @@ export default function Album() {
             disabled={loading}
             whileTap={{ scale: 1.1, rotate: -5 }}
           >
-            {loading ? "업로드 중..." : "사진 업로드 💖"}
+            {loading ? "Оруулж байна..." : "Зураг оруулах 💖"}
           </CuteButton>
           {error && (
             <Guide style={{ background: "#ffe3ef", color: "#ff7eb9" }}>
@@ -604,7 +606,7 @@ export default function Album() {
                       }}
                       whileTap={{ scale: 1.1 }}
                     >
-                      저장
+                      Хадгалах
                     </CuteButton>
                     <CuteButton
                       type="button"
@@ -615,7 +617,7 @@ export default function Album() {
                       }}
                       whileTap={{ scale: 1.1 }}
                     >
-                      취소
+                      Цуцлах
                     </CuteButton>
                   </div>
                 </div>
@@ -632,13 +634,14 @@ export default function Album() {
                       }}
                       whileTap={{ scale: 1.1 }}
                     >
-                      수정
+                      Засах
                     </CuteButton>
                     <CuteButton
                       type="button"
                       style={{ background: "#bbb" }}
                       onClick={async () => {
-                        if (!window.confirm("정말 삭제할까요?")) return;
+                        if (!window.confirm("Устгахдаа итгэлтэй байна уу?"))
+                          return;
                         await fetch(API_URL + "/" + p._id, {
                           method: "DELETE",
                           headers: { "Content-Type": "application/json" },
@@ -648,7 +651,7 @@ export default function Album() {
                       }}
                       whileTap={{ scale: 1.1 }}
                     >
-                      삭제
+                      Устгах
                     </CuteButton>
                   </div>
                 </>
@@ -708,10 +711,10 @@ export default function Album() {
                 exit={{ scale: 0.8, opacity: 0 }}
               >
                 <h3 style={{ marginBottom: "1em", color: "#ff7eb9" }}>
-                  💾 이미지 저장
+                  💾 Зургийг хадгалах
                 </h3>
                 <p style={{ marginBottom: "1.5em", color: "#666" }}>
-                  이 이미지를 저장하시겠어요?
+                  Энэ зургийг хадгахдаа итгэлтэй байна уу?
                 </p>
                 <div
                   style={{
@@ -733,7 +736,7 @@ export default function Album() {
                       });
                     }}
                   >
-                    💾 저장하기
+                    💾 Хадгалах
                   </DownloadButton>
                   <CancelButton
                     onClick={() =>
@@ -744,7 +747,7 @@ export default function Album() {
                       })
                     }
                   >
-                    취소
+                    Цуцлах
                   </CancelButton>
                 </div>
               </DownloadDialog>

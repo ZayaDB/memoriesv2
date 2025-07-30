@@ -112,49 +112,50 @@ const Register = ({ mode, inviteCode, onRegister }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
     setError("");
-    setCreatedCode("");
+    setMessage("");
     try {
       // 1. 회원가입
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, nickname }),
+        body: JSON.stringify({ name, email, password }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.message || "회원가입에 실패했습니다.");
+        setError(data.message || "Бүртгүүлэхэд алдаа гарлаа.");
         setLoading(false);
         return;
       }
+
       // 2. 회원가입 성공 후 커플방 생성/입장
-      const userId =
-        data.userId || data._id || data.id || (data.user && data.user._id);
+      const userId = data.user._id;
       if (!userId) {
         setError(
-          "회원가입 후 userId를 찾을 수 없습니다. 관리자에게 문의하세요."
+          "Бүртгүүлсний дараа хэрэглэгчийн ID олдсонгүй. Админтай холбогдоно уу."
         );
         setLoading(false);
         return;
       }
+
       if (mode === "create") {
         // 커플방 생성
-        const cRes = await fetch(`${API_BASE}/api/couple/create`, {
+        const cRes = await fetch(`${API_BASE}/api/couple`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId }),
         });
         const cData = await cRes.json();
         if (cRes.ok) {
-          setCreatedCode(cData.inviteCode);
+          setCreatedCode(cData.couple.inviteCode);
           setMessage(
-            "커플방이 생성되었습니다! 아래 초대코드를 상대방에게 전달하세요."
+            "Хосуудын өрөө үүсгэгдлээ! Доорх урилгын кодыг хамтрагчдад дамжуулна уу."
           );
+          if (onRegister) onRegister(cData.couple);
         } else {
-          setError(cData.message || "커플방 생성에 실패했습니다.");
+          setError(cData.message || "Хосуудын өрөө үүсгэхэд алдаа гарлаа.");
         }
-      } else if (mode === "join") {
+      } else {
         // 커플방 입장
         const jRes = await fetch(`${API_BASE}/api/couple/join`, {
           method: "POST",
@@ -163,17 +164,22 @@ const Register = ({ mode, inviteCode, onRegister }) => {
         });
         const jData = await jRes.json();
         if (jRes.ok) {
-          setMessage("커플방에 입장했습니다! 로그인 해주세요.");
-          if (onRegister) setTimeout(onRegister, 1500);
+          setMessage("Хосуудын өрөөнд амжилттай орлоо!");
+          if (onRegister) onRegister(jData.couple);
         } else {
-          setError(jData.message || "커플방 입장에 실패했습니다.");
+          setError(jData.message || "Хосуудын өрөөнд ороход алдаа гарлаа.");
         }
       }
     } catch (err) {
-      setError("서버 오류가 발생했습니다.");
+      setError("Серверийн алдаа гарлаа.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(createdCode);
+    setMessage("Урилгын код хуулагдлаа!");
   };
 
   return (
@@ -184,67 +190,8 @@ const Register = ({ mode, inviteCode, onRegister }) => {
           <span style={{ fontSize: "2.5em", marginBottom: "0.2em" }}>
             🐻‍❄️💖🐰
           </span>
-          <Title>커플 추억앱</Title>
-          <Sub>함께 시작해볼까요?</Sub>
-          {mode === "create" && createdCode && (
-            <div
-              style={{
-                color: "#ff7eb9",
-                marginBottom: 12,
-                fontWeight: 500,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <div style={{ fontSize: 18, marginBottom: 4 }}>
-                내 초대코드: <b>{createdCode}</b>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button
-                  style={{
-                    background: "#ffb3d1",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "0.4em 1em",
-                    cursor: "pointer",
-                    fontWeight: 500,
-                  }}
-                  onClick={() => {
-                    navigator.clipboard.writeText(createdCode);
-                    setMessage("초대코드가 복사되었습니다!");
-                  }}
-                >
-                  복사
-                </button>
-                <button
-                  style={{
-                    background: "#bbb",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "0.4em 1em",
-                    cursor: "pointer",
-                    fontWeight: 500,
-                  }}
-                  onClick={() => {
-                    if (onRegister) onRegister();
-                  }}
-                >
-                  확인
-                </button>
-              </div>
-            </div>
-          )}
-          {mode === "join" && inviteCode && (
-            <div
-              style={{ color: "#ff7eb9", marginBottom: 12, fontWeight: 500 }}
-            >
-              초대코드: <b>{inviteCode}</b>
-            </div>
-          )}
+          <Title>Хосуудын дурсамжийн апп</Title>
+          <Sub>Тавтай морил!</Sub>
           <div style={{ fontSize: "2em", marginBottom: "1em" }}>💗</div>
           <h2
             style={{
@@ -254,35 +201,90 @@ const Register = ({ mode, inviteCode, onRegister }) => {
               marginBottom: "1.2em",
             }}
           >
-            회원가입
+            {mode === "create"
+              ? "Хосуудын өрөө үүсгэх"
+              : "Хосуудын өрөөнд нэгдэх"}
           </h2>
+
+          {createdCode && (
+            <div
+              style={{
+                background: "#f8f9fa",
+                padding: "1.5em",
+                borderRadius: "12px",
+                marginBottom: "1.5em",
+                textAlign: "center",
+                border: "2px solid #ffe3ef",
+              }}
+            >
+              <div style={{ marginBottom: "1em", color: "#666" }}>
+                Миний урилгын код: <b>{createdCode}</b>
+              </div>
+              <Button
+                onClick={copyToClipboard}
+                style={{ fontSize: "0.9em", padding: "0.7em 1.5em" }}
+              >
+                Хуулах
+              </Button>
+            </div>
+          )}
+
+          {mode === "join" && (
+            <div
+              style={{
+                background: "#f8f9fa",
+                padding: "1.5em",
+                borderRadius: "12px",
+                marginBottom: "1.5em",
+                textAlign: "center",
+                border: "2px solid #ffe3ef",
+              }}
+            >
+              <div style={{ color: "#666" }}>
+                Урилгын код: <b>{inviteCode}</b>
+              </div>
+            </div>
+          )}
+
           <Form onSubmit={handleSubmit}>
             <Input
+              type="text"
+              placeholder="Нэрээ оруулна уу"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <Input
               type="email"
-              placeholder="이메일을 입력하세요"
+              placeholder="И-мэйл хаягаа оруулна уу"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              autoComplete="username"
             />
             <Input
               type="password"
-              placeholder="비밀번호를 입력하세요"
+              placeholder="Нууц үгийг оруулна уу"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete="new-password"
             />
             <Input
-              type="text"
-              placeholder="닉네임을 입력하세요"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
+              type="password"
+              placeholder="Нууц үгийг дахин оруулна уу"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              autoComplete="nickname"
             />
-            <Button type="submit" disabled={loading}>
-              {loading ? "가입 중..." : "회원가입"}
+            {password !== confirmPassword && confirmPassword && (
+              <div style={{ color: "#ff4d4f", fontSize: "0.9em" }}>
+                Нууц үгнүүд таарахгүй байна
+              </div>
+            )}
+            <Button
+              type="submit"
+              disabled={loading || password !== confirmPassword}
+            >
+              {loading ? "Бүртгэж байна..." : "Бүртгүүлэх"}
             </Button>
           </Form>
           <div
@@ -295,18 +297,17 @@ const Register = ({ mode, inviteCode, onRegister }) => {
               marginTop: 24,
             }}
           >
-            <span style={{ color: "#ffb3d1" }}>이미 회원이신가요?</span>
-            <span
-              onClick={() => onRegister && onRegister("login")}
+            <span style={{ color: "#ffb3d1" }}>Одоогоор гишүүн үү?</span>
+            <Link
+              to="/login"
               style={{
                 color: "#ff7eb9",
                 fontWeight: 700,
                 textDecoration: "underline",
-                cursor: "pointer",
               }}
             >
-              로그인
-            </span>
+              Нэвтрэх
+            </Link>
           </div>
           {message && (
             <div
@@ -324,7 +325,7 @@ const Register = ({ mode, inviteCode, onRegister }) => {
           )}
         </Card>
       </Center>
-      <Guide>하단 메뉴에서 다양한 추억을 만들어보세요!</Guide>
+      <Guide>Доод цэснээс бусад дурсамжуудыг харна уу!</Guide>
     </>
   );
 };

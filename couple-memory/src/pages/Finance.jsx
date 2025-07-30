@@ -195,12 +195,7 @@ const API_BASE = "https://memories-production-1440.up.railway.app";
 
 export default function Finance({ user, coupleId }) {
   const [financeData, setFinanceData] = useState({
-    goal: {
-      targetAmount: 0,
-      startDate: new Date(),
-      endDate: new Date(),
-      monthlyTarget: 0,
-    },
+    goal: null,
     monthlyIncome: 0,
     incomes: [],
     monthlyFixedExpense: 0,
@@ -211,20 +206,9 @@ export default function Finance({ user, coupleId }) {
     availableForSavings: 0,
     goalProgress: 0,
   });
-
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(""); // "goal", "income", "fixed-expense", "savings"
-  const [formData, setFormData] = useState({
-    amount: "",
-    category: "",
-    name: "",
-    description: "",
-    date: new Date().toISOString().split("T")[0],
-    targetAmount: "",
-    startDate: "",
-    endDate: "",
-  });
+  const [modalType, setModalType] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [formData, setFormData] = useState({});
 
   useEffect(() => {
     if (coupleId) {
@@ -235,267 +219,217 @@ export default function Finance({ user, coupleId }) {
   const loadFinanceData = async () => {
     try {
       const response = await fetch(
-        `${API_BASE}/api/finance?coupleId=${coupleId}`
+        `https://memories-production-1440.up.railway.app/api/finance?coupleId=${coupleId}`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setFinanceData(data);
-      }
-      setLoading(false);
+      const data = await response.json();
+      setFinanceData(data);
     } catch (error) {
-      console.error("금융 데이터 로드 실패:", error);
-      setLoading(false);
+      console.error("Санхүүгийн мэдээлэл ачаалахад алдаа:", error);
     }
   };
 
   const handleSetGoal = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/finance/goal`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          coupleId,
-          targetAmount: Number(formData.targetAmount),
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-        }),
-      });
-
+      const response = await fetch(
+        "https://memories-production-1440.up.railway.app/api/finance/goal",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            coupleId,
+            targetAmount: parseInt(formData.targetAmount),
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+          }),
+        }
+      );
       if (response.ok) {
-        const updatedData = await response.json();
-        setFinanceData(updatedData);
-        setShowModal(false);
-        alert("목표가 설정되었습니다!");
+        alert("Зорилго тохируулагдлаа!");
+        setModalOpen(false);
+        loadFinanceData();
       }
     } catch (error) {
-      console.error("목표 설정 실패:", error);
-      alert("목표 설정 중 오류가 발생했습니다.");
+      console.error("Зорилго тохируулах алдаа:", error);
+      alert("Зорилго тохируулахад алдаа гарлаа.");
     }
   };
 
   const handleAddIncome = async () => {
-    if (!formData.amount || !formData.category) {
-      alert("금액과 카테고리를 입력해주세요.");
-      return;
-    }
-
     try {
-      const response = await fetch(`${API_BASE}/api/finance/income`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          coupleId,
-          amount: Number(formData.amount),
-          category: formData.category,
-          description: formData.description,
-          date: formData.date,
-        }),
-      });
-
+      const response = await fetch(
+        "https://memories-production-1440.up.railway.app/api/finance/income",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            coupleId,
+            amount: parseInt(formData.amount),
+            category: formData.category,
+            name: formData.name,
+            date: formData.date,
+            description: formData.description,
+          }),
+        }
+      );
       if (response.ok) {
-        const updatedData = await response.json();
-        setFinanceData(updatedData);
-        setShowModal(false);
-        setFormData({
-          amount: "",
-          category: "",
-          description: "",
-          date: new Date().toISOString().split("T")[0],
-        });
-        alert("수익이 추가되었습니다!");
+        alert("Орлого нэмэгдлээ!");
+        setModalOpen(false);
+        loadFinanceData();
       }
     } catch (error) {
-      console.error("수익 추가 실패:", error);
-      alert("수익 추가 중 오류가 발생했습니다.");
+      console.error("Орлого нэмэх алдаа:", error);
+      alert("Орлого нэмэхэд алдаа гарлаа.");
     }
   };
 
   const handleAddFixedExpense = async () => {
     if (!formData.name || !formData.amount) {
-      alert("지출명과 금액을 입력해주세요.");
+      alert("Зардлын нэр болон дүнг оруулна уу.");
       return;
     }
-
     try {
-      const response = await fetch(`${API_BASE}/api/finance/fixed-expense`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          coupleId,
-          name: formData.name,
-          amount: Number(formData.amount),
-          description: formData.description,
-          date: formData.date,
-        }),
-      });
-
+      const response = await fetch(
+        "https://memories-production-1440.up.railway.app/api/finance/fixed-expense",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            coupleId,
+            amount: parseInt(formData.amount),
+            name: formData.name,
+            description: formData.description,
+          }),
+        }
+      );
       if (response.ok) {
-        const updatedData = await response.json();
-        setFinanceData(updatedData);
-        setShowModal(false);
-        setFormData({
-          amount: "",
-          name: "",
-          description: "",
-          date: new Date().toISOString().split("T")[0],
-        });
-        alert("고정 지출이 추가되었습니다!");
+        alert("Тогтмол зардал нэмэгдлээ!");
+        setModalOpen(false);
+        loadFinanceData();
       }
     } catch (error) {
-      console.error("고정 지출 추가 실패:", error);
-      alert("고정 지출 추가 중 오류가 발생했습니다.");
+      console.error("Тогтмол зардал нэмэх алдаа:", error);
+      alert("Тогтмол зардал нэмэхэд алдаа гарлаа.");
     }
   };
 
   const handleAddSavings = async () => {
-    if (!formData.amount) {
-      alert("금액을 입력해주세요.");
-      return;
-    }
-
     try {
-      const response = await fetch(`${API_BASE}/api/finance/savings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          coupleId,
-          amount: Number(formData.amount),
-          description: formData.description,
-          date: formData.date,
-        }),
-      });
-
+      const response = await fetch(
+        "https://memories-production-1440.up.railway.app/api/finance/savings",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            coupleId,
+            amount: parseInt(formData.amount),
+            date: formData.date,
+            description: formData.description,
+          }),
+        }
+      );
       if (response.ok) {
-        const updatedData = await response.json();
-        setFinanceData(updatedData);
-        setShowModal(false);
-        setFormData({
-          amount: "",
-          description: "",
-          date: new Date().toISOString().split("T")[0],
-        });
-        alert("적금이 추가되었습니다!");
+        alert("Хадгаламж нэмэгдлээ!");
+        setModalOpen(false);
+        loadFinanceData();
       }
     } catch (error) {
-      console.error("적금 추가 실패:", error);
-      alert("적금 추가 중 오류가 발생했습니다.");
+      console.error("Хадгаламж нэмэх алдаа:", error);
+      alert("Хадгаламж нэмэхэд алдаа гарлаа.");
     }
   };
 
   const openModal = (type) => {
     setModalType(type);
-    setShowModal(true);
+    setModalOpen(true);
     if (type === "goal") {
       setFormData({
-        targetAmount: financeData.goal.targetAmount.toString(),
-        startDate: financeData.goal.startDate
-          ? new Date(financeData.goal.startDate).toISOString().split("T")[0]
-          : "",
-        endDate: financeData.goal.endDate
-          ? new Date(financeData.goal.endDate).toISOString().split("T")[0]
-          : "",
-        amount: "",
-        category: "",
-        name: "",
-        description: "",
-        date: new Date().toISOString().split("T")[0],
+        targetAmount: "",
+        startDate: "",
+        endDate: "",
       });
-    } else {
+    } else if (type === "income") {
       setFormData({
         amount: "",
-        category: "",
+        category: "salary",
+        name: "",
+        date: new Date().toISOString().split("T")[0],
+        description: "",
+      });
+    } else if (type === "fixed-expense") {
+      setFormData({
+        amount: "",
         name: "",
         description: "",
+      });
+    } else if (type === "savings") {
+      setFormData({
+        amount: "",
         date: new Date().toISOString().split("T")[0],
+        description: "",
       });
     }
   };
 
   const getRemainingDays = () => {
-    if (!financeData.goal.endDate) return 0;
-    const endDate = new Date(financeData.goal.endDate);
+    if (!financeData.goal?.endDate) return 0;
+    const end = new Date(financeData.goal.endDate);
     const now = new Date();
-    const diffTime = endDate - now;
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, Math.ceil((end - now) / (1000 * 60 * 60 * 24)));
   };
 
   const getDailyTarget = () => {
-    const remainingDays = getRemainingDays();
-    const remainingAmount =
-      financeData.goal.targetAmount - financeData.totalSavings;
-    return remainingDays > 0 ? Math.ceil(remainingAmount / remainingDays) : 0;
-  };
-
-  if (loading) {
-    return (
-      <>
-        <BG />
-        <Container>
-          <Title>로딩 중...</Title>
-        </Container>
-      </>
+    if (!financeData.goal?.targetAmount || !financeData.goal?.endDate) return 0;
+    const remaining = getRemainingDays();
+    if (remaining === 0) return 0;
+    return Math.ceil(
+      (financeData.goal.targetAmount - financeData.totalSavings) / remaining
     );
-  }
+  };
 
   return (
     <>
       <BG />
       <Container>
-        <Title>💰 우리 돈 관리</Title>
+        <Title>💰 Бидний мөнгөн хэрэг</Title>
 
         {/* 목표 현황 */}
         <Card
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ delay: 0.1 }}
         >
-          <CardTitle>
-            🎯 우리의 목표
-            {financeData.goal.targetAmount === 0 && (
-              <AddButton
-                onClick={() => openModal("goal")}
-                style={{
-                  fontSize: "0.8rem",
-                  padding: "0.3em 0.8em",
-                  margin: 0,
-                }}
-              >
-                설정
-              </AddButton>
-            )}
-          </CardTitle>
-          {financeData.goal.targetAmount > 0 ? (
+          <CardTitle>🎯 Бидний зорилго</CardTitle>
+          {financeData.goal ? (
             <>
-              <Amount positive={true}>
-                {financeData.goal.targetAmount.toLocaleString()}원
+              <Amount positive>
+                {financeData.goal.targetAmount?.toLocaleString()}₮
               </Amount>
               <ProgressBar>
                 <ProgressFill percentage={financeData.goalProgress} />
               </ProgressBar>
               <StatGrid>
                 <StatItem>
-                  <StatLabel>현재 모은 금액</StatLabel>
-                  <StatValue>
-                    {financeData.totalSavings.toLocaleString()}원
-                  </StatValue>
+                  <StatLabel>Биелэлт</StatLabel>
+                  <StatValue>{Math.round(financeData.goalProgress)}%</StatValue>
                 </StatItem>
                 <StatItem>
-                  <StatLabel>달성률</StatLabel>
-                  <StatValue>{financeData.goalProgress}%</StatValue>
-                </StatItem>
-                <StatItem>
-                  <StatLabel>남은 기간</StatLabel>
-                  <StatValue>{getRemainingDays()}일</StatValue>
-                </StatItem>
-                <StatItem>
-                  <StatLabel>하루 목표</StatLabel>
-                  <StatValue>{getDailyTarget().toLocaleString()}원</StatValue>
+                  <StatLabel>Өдөр тутмын зорилго</StatLabel>
+                  <StatValue>{getDailyTarget().toLocaleString()}₮</StatValue>
                 </StatItem>
               </StatGrid>
+              <div
+                style={{
+                  textAlign: "center",
+                  color: "#666",
+                  fontSize: "0.9rem",
+                }}
+              >
+                {getRemainingDays()} хоног үлдлээ
+              </div>
             </>
           ) : (
-            <div style={{ textAlign: "center", color: "#666", padding: "2em" }}>
-              목표를 설정해주세요!
+            <div style={{ textAlign: "center", color: "#666" }}>
+              Зорилгоо тохируулна уу!
             </div>
           )}
         </Card>
@@ -504,21 +438,21 @@ export default function Finance({ user, coupleId }) {
         <Card
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          transition={{ delay: 0.2 }}
         >
-          <CardTitle>💰 이번달 수익</CardTitle>
-          <Amount positive={true}>
-            {financeData.monthlyIncome.toLocaleString()}원
+          <CardTitle>💰 Энэ сарын орлого</CardTitle>
+          <Amount positive>
+            {financeData.monthlyIncome?.toLocaleString()}₮
           </Amount>
           <StatGrid>
             <StatItem>
-              <StatLabel>수익 항목</StatLabel>
-              <StatValue>{financeData.incomes.length}개</StatValue>
+              <StatLabel>Орлогын тоо</StatLabel>
+              <StatValue>{financeData.incomes?.length || 0}</StatValue>
             </StatItem>
             <StatItem>
-              <StatLabel>적금 가능</StatLabel>
+              <StatLabel>Хадгалах боломж</StatLabel>
               <StatValue>
-                {financeData.availableForSavings.toLocaleString()}원
+                {financeData.availableForSavings?.toLocaleString()}₮
               </StatValue>
             </StatItem>
           </StatGrid>
@@ -528,19 +462,19 @@ export default function Finance({ user, coupleId }) {
         <Card
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ delay: 0.3 }}
         >
-          <CardTitle>💸 이번달 고정 지출</CardTitle>
+          <CardTitle>💸 Энэ сарын тогтмол зардал</CardTitle>
           <Amount positive={false}>
-            {financeData.monthlyFixedExpense.toLocaleString()}원
+            {financeData.monthlyFixedExpense?.toLocaleString()}₮
           </Amount>
           <StatGrid>
             <StatItem>
-              <StatLabel>지출 항목</StatLabel>
-              <StatValue>{financeData.fixedExpenses.length}개</StatValue>
+              <StatLabel>Зардлын тоо</StatLabel>
+              <StatValue>{financeData.fixedExpenses?.length || 0}</StatValue>
             </StatItem>
             <StatItem>
-              <StatLabel>수익 대비</StatLabel>
+              <StatLabel>Орлогод харьцуулбал</StatLabel>
               <StatValue>
                 {financeData.monthlyIncome > 0
                   ? Math.round(
@@ -559,21 +493,21 @@ export default function Finance({ user, coupleId }) {
         <Card
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ delay: 0.4 }}
         >
-          <CardTitle>🏦 이번달 적금</CardTitle>
-          <Amount positive={true}>
-            {financeData.monthlySavings.toLocaleString()}원
+          <CardTitle>🏦 Энэ сарын хадгаламж</CardTitle>
+          <Amount positive>
+            {financeData.monthlySavings?.toLocaleString()}₮
           </Amount>
           <StatGrid>
             <StatItem>
-              <StatLabel>적금 횟수</StatLabel>
-              <StatValue>{financeData.savings.length}회</StatValue>
+              <StatLabel>Хадгаламжийн тоо</StatLabel>
+              <StatValue>{financeData.savings?.length || 0}</StatValue>
             </StatItem>
             <StatItem>
-              <StatLabel>월 목표 대비</StatLabel>
+              <StatLabel>Сарын зорилгод харьцуулбал</StatLabel>
               <StatValue>
-                {financeData.goal.monthlyTarget > 0
+                {financeData.goal?.monthlyTarget > 0
                   ? Math.round(
                       (financeData.monthlySavings /
                         financeData.goal.monthlyTarget) *
@@ -586,207 +520,237 @@ export default function Finance({ user, coupleId }) {
           </StatGrid>
         </Card>
 
-        <ButtonGroup>
+        {/* 액션 버튼들 */}
+        <div
+          style={{
+            display: "flex",
+            gap: "1em",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            marginTop: "2em",
+          }}
+        >
           <AddButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => openModal("goal")}
           >
-            🎯 목표 설정
+            🎯 Зорилго тохируулах
           </AddButton>
           <AddButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => openModal("income")}
           >
-            💰 수익 추가
+            💰 Орлого нэмэх
           </AddButton>
           <AddButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => openModal("fixed-expense")}
           >
-            💸 고정 지출
+            💸 Тогтмол зардал
           </AddButton>
           <AddButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => openModal("savings")}
           >
-            🏦 적금 추가
+            🏦 Хадгаламж нэмэх
           </AddButton>
-        </ButtonGroup>
-      </Container>
+        </div>
 
-      <AnimatePresence>
-        {showModal && (
-          <Modal
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <ModalContent
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
+        {/* 모달 */}
+        <AnimatePresence>
+          {modalOpen && (
+            <Modal
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              <h3 style={{ marginBottom: "1em", color: "#ff7eb9" }}>
-                {modalType === "goal"
-                  ? "🎯 목표 설정"
-                  : modalType === "income"
-                  ? "💰 수익 추가"
-                  : modalType === "fixed-expense"
-                  ? "💸 고정 지출 추가"
-                  : "🏦 적금 추가"}
-              </h3>
+              <ModalContent
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+              >
+                <h3 style={{ marginBottom: "1em", color: "#ff7eb9" }}>
+                  {modalType === "goal"
+                    ? "🎯 Зорилго тохируулах"
+                    : modalType === "income"
+                    ? "💰 Орлого нэмэх"
+                    : modalType === "fixed-expense"
+                    ? "💸 Тогтмол зардал нэмэх"
+                    : "🏦 Хадгаламж нэмэх"}
+                </h3>
 
-              {modalType === "goal" ? (
-                <>
-                  <Input
-                    type="number"
-                    placeholder="목표 금액 (원)"
-                    value={formData.targetAmount}
-                    onChange={(e) =>
-                      setFormData({ ...formData, targetAmount: e.target.value })
-                    }
-                  />
-                  <Input
-                    type="date"
-                    placeholder="시작일"
-                    value={formData.startDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, startDate: e.target.value })
-                    }
-                  />
-                  <Input
-                    type="date"
-                    placeholder="목표일"
-                    value={formData.endDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, endDate: e.target.value })
-                    }
-                  />
-                </>
-              ) : modalType === "income" ? (
-                <>
-                  <Input
-                    type="number"
-                    placeholder="금액 (원)"
-                    value={formData.amount}
-                    onChange={(e) =>
-                      setFormData({ ...formData, amount: e.target.value })
-                    }
-                  />
-                  <Select
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
+                {modalType === "goal" && (
+                  <>
+                    <Input
+                      type="number"
+                      placeholder="Зорилгын дүн (₮)"
+                      value={formData.targetAmount || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          targetAmount: e.target.value,
+                        })
+                      }
+                    />
+                    <Input
+                      type="date"
+                      placeholder="Эхлэх огноо"
+                      value={formData.startDate || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, startDate: e.target.value })
+                      }
+                    />
+                    <Input
+                      type="date"
+                      placeholder="Зорилгын огноо"
+                      value={formData.endDate || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, endDate: e.target.value })
+                      }
+                    />
+                  </>
+                )}
+
+                {modalType === "income" && (
+                  <>
+                    <Select
+                      value={formData.category || "salary"}
+                      onChange={(e) =>
+                        setFormData({ ...formData, category: e.target.value })
+                      }
+                    >
+                      <option value="salary">Цалин</option>
+                      <option value="bonus">Нэмэлт</option>
+                      <option value="business">Бизнес</option>
+                      <option value="investment">Хөрөнгө оруулалт</option>
+                      <option value="other">Бусад</option>
+                    </Select>
+                    <Input
+                      type="number"
+                      placeholder="Орлогын дүн (₮)"
+                      value={formData.amount || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, amount: e.target.value })
+                      }
+                    />
+                    <Input
+                      type="text"
+                      placeholder="Орлогын нэр"
+                      value={formData.name || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                    />
+                    <Input
+                      type="date"
+                      placeholder="Орлогын огноо"
+                      value={formData.date || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, date: e.target.value })
+                      }
+                    />
+                    <TextArea
+                      placeholder="Тайлбар (сонгоно уу)"
+                      value={formData.description || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                  </>
+                )}
+
+                {modalType === "fixed-expense" && (
+                  <>
+                    <Input
+                      type="text"
+                      placeholder="Зардлын нэр (жишээ: сар бүрийн төлбөр, удирдлагын төлбөр)"
+                      value={formData.name || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Зардлын дүн (₮)"
+                      value={formData.amount || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, amount: e.target.value })
+                      }
+                    />
+                    <TextArea
+                      placeholder="Тайлбар (сонгоно уу)"
+                      value={formData.description || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                  </>
+                )}
+
+                {modalType === "savings" && (
+                  <>
+                    <Input
+                      type="number"
+                      placeholder="Хадгаламжийн дүн (₮)"
+                      value={formData.amount || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, amount: e.target.value })
+                      }
+                    />
+                    <Input
+                      type="date"
+                      placeholder="Хадгаламжийн огноо"
+                      value={formData.date || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, date: e.target.value })
+                      }
+                    />
+                    <TextArea
+                      placeholder="Тайлбар (сонгоно уу)"
+                      value={formData.description || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                  </>
+                )}
+
+                <ButtonGroup>
+                  <AddButton
+                    onClick={
+                      modalType === "goal"
+                        ? handleSetGoal
+                        : modalType === "income"
+                        ? handleAddIncome
+                        : modalType === "fixed-expense"
+                        ? handleAddFixedExpense
+                        : handleAddSavings
                     }
                   >
-                    <option value="">카테고리 선택</option>
-                    <option value="급여">급여</option>
-                    <option value="부업">부업</option>
-                    <option value="투자">투자</option>
-                    <option value="기타">기타</option>
-                  </Select>
-                  <Input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, date: e.target.value })
-                    }
-                  />
-                  <TextArea
-                    placeholder="메모 (선택사항)"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                  />
-                </>
-              ) : modalType === "fixed-expense" ? (
-                <>
-                  <Input
-                    type="text"
-                    placeholder="지출명 (예: 월세, 관리비)"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                  />
-                  <Input
-                    type="number"
-                    placeholder="금액 (원)"
-                    value={formData.amount}
-                    onChange={(e) =>
-                      setFormData({ ...formData, amount: e.target.value })
-                    }
-                  />
-                  <Input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, date: e.target.value })
-                    }
-                  />
-                  <TextArea
-                    placeholder="메모 (선택사항)"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                  />
-                </>
-              ) : (
-                <>
-                  <Input
-                    type="number"
-                    placeholder="적금 금액 (원)"
-                    value={formData.amount}
-                    onChange={(e) =>
-                      setFormData({ ...formData, amount: e.target.value })
-                    }
-                  />
-                  <Input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) =>
-                      setFormData({ ...formData, date: e.target.value })
-                    }
-                  />
-                  <TextArea
-                    placeholder="메모 (선택사항)"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                  />
-                </>
-              )}
-
-              <ButtonGroup>
-                <AddButton
-                  onClick={() => {
-                    if (modalType === "goal") handleSetGoal();
-                    else if (modalType === "income") handleAddIncome();
-                    else if (modalType === "fixed-expense")
-                      handleAddFixedExpense();
-                    else if (modalType === "savings") handleAddSavings();
-                  }}
-                >
-                  저장
-                </AddButton>
-                <AddButton
-                  onClick={() => setShowModal(false)}
-                  style={{ background: "#ccc" }}
-                >
-                  취소
-                </AddButton>
-              </ButtonGroup>
-            </ModalContent>
-          </Modal>
-        )}
-      </AnimatePresence>
+                    Хадгалах
+                  </AddButton>
+                  <AddButton onClick={() => setModalOpen(false)}>
+                    Цуцлах
+                  </AddButton>
+                </ButtonGroup>
+              </ModalContent>
+            </Modal>
+          )}
+        </AnimatePresence>
+      </Container>
     </>
   );
 }

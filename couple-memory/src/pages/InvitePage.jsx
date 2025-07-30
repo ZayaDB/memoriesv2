@@ -125,15 +125,17 @@ export default function InvitePage({ onSuccess }) {
       <Center>
         <Card>
           <span style={{ fontSize: "2.5em", marginBottom: "0.2em" }}>💌</span>
-          <Title>커플방 연결</Title>
-          <Sub>초대코드로 입장하거나, 새 커플방을 만들어보세요!</Sub>
+          <Title>Хосуудын өрөө холбогдох</Title>
+          <Sub>
+            Урилгын кодыг ашиглан орж эсвэл шинэ хосуудын өрөө үүсгээрэй!
+          </Sub>
           {!mode && (
             <>
               <OptionBtn onClick={() => setMode("join")}>
-                초대코드로 입장
+                Урилгын кодыг ашиглан орох
               </OptionBtn>
               <OptionBtn onClick={() => setMode("create")}>
-                새 커플방 만들기
+                Шинэ хосуудын өрөө үүсгэх
               </OptionBtn>
             </>
           )}
@@ -146,32 +148,34 @@ export default function InvitePage({ onSuccess }) {
             >
               <Input
                 type="text"
-                placeholder="초대코드를 입력하세요"
+                placeholder="Урилгын кодыг оруулна уу"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                 required
                 maxLength={8}
                 autoFocus
               />
-              <Button type="submit">다음</Button>
+              <Button type="submit">Дараах</Button>
               <OptionBtn type="button" onClick={() => setMode(null)}>
-                돌아가기
+                Буцах
               </OptionBtn>
             </Form>
           )}
           {mode === "create" && (
             <>
               <Button style={{ marginTop: 24 }} onClick={handleNext}>
-                회원가입 하러 가기
+                Бүртгүүлэхэд очих
               </Button>
               <OptionBtn type="button" onClick={() => setMode(null)}>
-                돌아가기
+                Буцах
               </OptionBtn>
             </>
           )}
         </Card>
       </Center>
-      <Guide>커플방 연결 후 다양한 추억을 시작해보세요!</Guide>
+      <Guide>
+        Хосуудын өрөө холбогдсны дараа олон төрлийн дурсамж эхлүүлээрэй!
+      </Guide>
     </>
   );
 }
