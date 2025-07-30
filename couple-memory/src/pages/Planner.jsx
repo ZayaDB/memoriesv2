@@ -62,6 +62,7 @@ const Item = styled(motion.li)`
   display: flex;
   flex-direction: column;
   gap: 0.5em;
+  position: relative;
 `;
 const AddForm = styled.form`
   display: flex;
@@ -114,6 +115,56 @@ const DoneBadge = styled.span`
   margin-left: 0.5em;
 `;
 
+// 새로운 스타일 컴포넌트들
+const ActionButtons = styled.div`
+  display: flex;
+  gap: 0.5em;
+  margin-top: 0.5em;
+`;
+
+const ActionButton = styled(motion.button)`
+  background: ${({ variant }) =>
+    variant === "edit"
+      ? "#ffb3d1"
+      : variant === "delete"
+      ? "#ff6b6b"
+      : variant === "complete"
+      ? "#4ecdc4"
+      : "#ff7eb9"};
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4em 0.8em;
+  font-size: 0.9em;
+  cursor: pointer;
+  font-family: ${({ theme }) => theme.font.cute};
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const EditForm = styled.div`
+  margin-top: 0.5em;
+  padding: 0.8em;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #ffe3ef;
+`;
+
+const Checkbox = styled.input`
+  margin-right: 0.5em;
+  transform: scale(1.2);
+`;
+
+const CheckboxLabel = styled.label`
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: #666;
+`;
+
 function formatDate(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
@@ -136,6 +187,15 @@ export default function Planner() {
   });
   const [loading, setLoading] = useState(false);
   const [hearts, setHearts] = useState([]);
+  const [editIdx, setEditIdx] = useState(-1);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    startDate: "",
+    endDate: "",
+    place: "",
+    type: "trip",
+  });
 
   // 로그인한 유저의 coupleId 추출
   const coupleId = (() => {
@@ -165,6 +225,10 @@ export default function Planner() {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   };
 
+  const handleEditChange = (e) => {
+    setEditForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  };
+
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!form.title.trim() || !form.startDate) return;
@@ -182,6 +246,56 @@ export default function Planner() {
       type: "trip",
     });
     fetchPlans();
+  };
+
+  const handleEdit = async (planId) => {
+    if (!editForm.title.trim() || !editForm.startDate) return;
+    await fetch(`${API_URL}/${planId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...editForm, coupleId }),
+    });
+    setEditIdx(-1);
+    setEditForm({
+      title: "",
+      description: "",
+      startDate: "",
+      endDate: "",
+      place: "",
+      type: "trip",
+    });
+    fetchPlans();
+  };
+
+  const handleDelete = async (planId) => {
+    if (!window.confirm("정말 삭제할까요?")) return;
+    await fetch(`${API_URL}/${planId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ coupleId }),
+    });
+    fetchPlans();
+  };
+
+  const handleToggleComplete = async (planId, currentDone) => {
+    await fetch(`${API_URL}/${planId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ done: !currentDone, coupleId }),
+    });
+    fetchPlans();
+  };
+
+  const startEdit = (plan) => {
+    setEditIdx(plans.indexOf(plan));
+    setEditForm({
+      title: plan.title,
+      description: plan.description || "",
+      startDate: plan.startDate,
+      endDate: plan.endDate || "",
+      place: plan.place || "",
+      type: plan.type,
+    });
   };
 
   const popHeart = () => {
@@ -221,8 +335,10 @@ export default function Planner() {
           ))}
         </AnimatePresence>
         <TopIcon>✈️</TopIcon>
-        <Title>기념일 & 여행 플래너</Title>
-        <Guide>우리의 특별한 날과 여행을 함께 계획해보자!</Guide>
+        <Title>Planner</Title>
+        <Guide>
+          우리의 특별한 날과 여행을 함께 계획해보자! ✅ 완료 체크도 가능해요!
+        </Guide>
         <AddForm onSubmit={handleAdd}>
           <Input
             name="title"
@@ -280,6 +396,10 @@ export default function Planner() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
+                style={{
+                  opacity: p.done ? 0.6 : 1,
+                  textDecoration: p.done ? "line-through" : "none",
+                }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: "1.3em" }}>
@@ -303,6 +423,116 @@ export default function Planner() {
                   <div style={{ color: "#888", fontSize: "0.97em" }}>
                     {p.description}
                   </div>
+                )}
+
+                {/* 완료 체크박스 */}
+                <CheckboxLabel>
+                  <Checkbox
+                    type="checkbox"
+                    checked={p.done || false}
+                    onChange={() => handleToggleComplete(p._id, p.done)}
+                  />
+                  완료했어요!
+                </CheckboxLabel>
+
+                {/* 수정 모드 */}
+                {editIdx === i ? (
+                  <EditForm>
+                    <Input
+                      name="title"
+                      placeholder="제목"
+                      value={editForm.title}
+                      onChange={handleEditChange}
+                      required
+                    />
+                    <Input
+                      name="description"
+                      placeholder="메모/계획"
+                      value={editForm.description}
+                      onChange={handleEditChange}
+                    />
+                    <Input
+                      name="place"
+                      placeholder="장소"
+                      value={editForm.place}
+                      onChange={handleEditChange}
+                    />
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <Input
+                        name="startDate"
+                        type="date"
+                        value={editForm.startDate}
+                        onChange={handleEditChange}
+                        required
+                        style={{ flex: 1 }}
+                      />
+                      <Input
+                        name="endDate"
+                        type="date"
+                        value={editForm.endDate}
+                        onChange={handleEditChange}
+                        style={{ flex: 1 }}
+                      />
+                    </div>
+                    <Select
+                      name="type"
+                      value={editForm.type}
+                      onChange={handleEditChange}
+                    >
+                      <option value="trip">여행</option>
+                      <option value="anniversary">기념일</option>
+                      <option value="date">데이트</option>
+                      <option value="etc">기타</option>
+                    </Select>
+                    <ActionButtons>
+                      <ActionButton
+                        type="button"
+                        variant="complete"
+                        onClick={() => handleEdit(p._id)}
+                        whileTap={{ scale: 1.1 }}
+                      >
+                        💾 저장
+                      </ActionButton>
+                      <ActionButton
+                        type="button"
+                        variant="delete"
+                        onClick={() => {
+                          setEditIdx(-1);
+                          setEditForm({
+                            title: "",
+                            description: "",
+                            startDate: "",
+                            endDate: "",
+                            place: "",
+                            type: "trip",
+                          });
+                        }}
+                        whileTap={{ scale: 1.1 }}
+                      >
+                        ❌ 취소
+                      </ActionButton>
+                    </ActionButtons>
+                  </EditForm>
+                ) : (
+                  /* 액션 버튼들 */
+                  <ActionButtons>
+                    <ActionButton
+                      type="button"
+                      variant="edit"
+                      onClick={() => startEdit(p)}
+                      whileTap={{ scale: 1.1 }}
+                    >
+                      ✏️ 수정
+                    </ActionButton>
+                    <ActionButton
+                      type="button"
+                      variant="delete"
+                      onClick={() => handleDelete(p._id)}
+                      whileTap={{ scale: 1.1 }}
+                    >
+                      🗑️ 삭제
+                    </ActionButton>
+                  </ActionButtons>
                 )}
               </Item>
             ))}

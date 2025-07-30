@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { motion, AnimatePresence } from "framer-motion";
 import "swiper/css";
@@ -71,6 +71,9 @@ const Img = styled.img`
   object-fit: cover;
   border-radius: 10px;
   margin-bottom: 0.3em;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 `;
 const Caption = styled.div`
   color: ${({ theme }) => theme.colors.primary};
@@ -107,6 +110,9 @@ const ModalImg = styled.img`
   max-width: 80vw;
   max-height: 60vh;
   border-radius: 12px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 `;
 const CloseBtn = styled.button`
   background: #ff7eb9;
@@ -121,6 +127,51 @@ const CloseBtn = styled.button`
   right: 20px;
   cursor: pointer;
 `;
+
+// 다운로드 다이얼로그 스타일
+const DownloadDialog = styled(motion.div)`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 20px;
+  padding: 2em;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  text-align: center;
+  max-width: 300px;
+  width: 90%;
+`;
+
+const DownloadButton = styled.button`
+  background: ${({ theme }) => theme.colors.primary};
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 1em 2em;
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 0.5em;
+  font-family: ${({ theme }) => theme.font.cute};
+
+  &:hover {
+    background: #ffb3d1;
+  }
+`;
+
+const CancelButton = styled.button`
+  background: #ccc;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 1em 2em;
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 0.5em;
+  font-family: ${({ theme }) => theme.font.cute};
+`;
+
 const CommentBox = styled.div`
   width: 100%;
   margin-top: 1em;
@@ -315,6 +366,14 @@ export default function Album() {
   const [editIdx, setEditIdx] = useState(-1);
   const [editCaption, setEditCaption] = useState("");
 
+  // 다운로드 관련 상태
+  const [downloadDialog, setDownloadDialog] = useState({
+    show: false,
+    imageUrl: "",
+    imageName: "",
+  });
+  const longPressTimer = useRef(null);
+
   // 로그인한 유저의 coupleId 추출
   const coupleId = (() => {
     try {
@@ -344,6 +403,56 @@ export default function Album() {
     const y = Math.random() * 60 + 20;
     setHearts((prev) => [...prev, { id, x, y }]);
     setTimeout(() => setHearts((prev) => prev.filter((h) => h.id !== id)), 900);
+  };
+
+  // 이미지 다운로드 함수
+  const downloadImage = async (imageUrl, imageName) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+
+      // 다운로드 링크 생성
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = imageName || "couple-memory.jpg";
+
+      // 다운로드 실행
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // 메모리 정리
+      window.URL.revokeObjectURL(url);
+
+      alert("이미지가 저장되었습니다! 📱");
+    } catch (error) {
+      console.error("다운로드 실패:", error);
+      alert("다운로드에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
+  // 길게 누르기 시작
+  const handleTouchStart = (imageUrl, imageName) => {
+    longPressTimer.current = setTimeout(() => {
+      setDownloadDialog({ show: true, imageUrl, imageName });
+    }, 500); // 0.5초 길게 누르기
+  };
+
+  // 길게 누르기 취소
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  // 길게 누르기 취소 (터치 이동)
+  const handleTouchMove = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -409,7 +518,7 @@ export default function Album() {
         </AnimatePresence>
         <TopIcon>📸</TopIcon>
         <Title>추억 앨범</Title>
-        <Guide>우리 추억을 남겨보자!</Guide>
+        <Guide>우리 추억을 남겨보자! 📱 길게 누르면 저장할 수 있어요!</Guide>
         <Form onSubmit={handleSubmit}>
           <Input
             type="file"
@@ -456,6 +565,14 @@ export default function Album() {
                       alt={p.caption}
                       style={{ cursor: "pointer" }}
                       onClick={() => openModal(photoIdx, imgIdx)}
+                      onTouchStart={() =>
+                        handleTouchStart(
+                          url,
+                          `${p.caption || "couple-memory"}-${imgIdx + 1}.jpg`
+                        )
+                      }
+                      onTouchEnd={handleTouchEnd}
+                      onTouchMove={handleTouchMove}
                     />
                   </SwiperSlide>
                 ))}
@@ -553,7 +670,20 @@ export default function Album() {
               >
                 {photos[modal.photoIdx].urls.map((url, idx) => (
                   <SwiperSlide key={idx}>
-                    <ModalImg src={url} alt="modal" />
+                    <ModalImg
+                      src={url}
+                      alt="modal"
+                      onTouchStart={() =>
+                        handleTouchStart(
+                          url,
+                          `${
+                            photos[modal.photoIdx].caption || "couple-memory"
+                          }-${idx + 1}.jpg`
+                        )
+                      }
+                      onTouchEnd={handleTouchEnd}
+                      onTouchMove={handleTouchMove}
+                    />
                   </SwiperSlide>
                 ))}
               </Swiper>
@@ -567,6 +697,60 @@ export default function Album() {
             </ModalContent>
           </ModalOverlay>
         )}
+
+        {/* 다운로드 다이얼로그 */}
+        <AnimatePresence>
+          {downloadDialog.show && (
+            <ModalOverlay>
+              <DownloadDialog
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+              >
+                <h3 style={{ marginBottom: "1em", color: "#ff7eb9" }}>
+                  💾 이미지 저장
+                </h3>
+                <p style={{ marginBottom: "1.5em", color: "#666" }}>
+                  이 이미지를 저장하시겠어요?
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "1em",
+                    justifyContent: "center",
+                  }}
+                >
+                  <DownloadButton
+                    onClick={() => {
+                      downloadImage(
+                        downloadDialog.imageUrl,
+                        downloadDialog.imageName
+                      );
+                      setDownloadDialog({
+                        show: false,
+                        imageUrl: "",
+                        imageName: "",
+                      });
+                    }}
+                  >
+                    💾 저장하기
+                  </DownloadButton>
+                  <CancelButton
+                    onClick={() =>
+                      setDownloadDialog({
+                        show: false,
+                        imageUrl: "",
+                        imageName: "",
+                      })
+                    }
+                  >
+                    취소
+                  </CancelButton>
+                </div>
+              </DownloadDialog>
+            </ModalOverlay>
+          )}
+        </AnimatePresence>
       </Container>
     </>
   );
