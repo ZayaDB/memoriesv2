@@ -824,6 +824,46 @@ export default function Finance({ user, coupleId }) {
               >
                 {getRemainingDays()} хоног үлдлээ
               </div>
+              {financeData.goal && financeData.availableForSavings > 0 && (
+                <div
+                  style={{
+                    marginTop: "0.8em",
+                    padding: "0.8em",
+                    background: "#e8f5e8",
+                    borderRadius: "8px",
+                    border: "1px solid #4CAF50",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "0.9rem",
+                      color: "#2E7D32",
+                      fontWeight: "bold",
+                      marginBottom: "0.3em",
+                    }}
+                  >
+                    💡 Зорилго хурдан биелүүлэх зөвлөмж:
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "#666" }}>
+                    Энэ сард{" "}
+                    {Math.min(
+                      financeData.availableForSavings,
+                      financeData.goal.targetAmount - financeData.totalSavings
+                    )?.toLocaleString()}
+                    ₮ хадгалбал зорилгын{" "}
+                    {(
+                      (Math.min(
+                        financeData.availableForSavings,
+                        financeData.goal.targetAmount - financeData.totalSavings
+                      ) /
+                        (financeData.goal.targetAmount -
+                          financeData.totalSavings)) *
+                      100
+                    )?.toFixed(1)}
+                    % биелнэ!
+                  </div>
+                </div>
+              )}
               <div style={{ textAlign: "center", marginTop: "1em" }}>
                 <AddButton
                   onClick={handleEditGoalClick}
@@ -1024,198 +1064,6 @@ export default function Finance({ user, coupleId }) {
                 ))}
               </div>
             )}
-        </Card>
-
-        {/* 적금 현황 */}
-        <Card
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <CardTitle>🏦 Энэ сарын хадгаламж</CardTitle>
-          <Amount positive>
-            {financeData.monthlySavings?.toLocaleString()}₮
-          </Amount>
-          <StatGrid>
-            <StatItem>
-              <StatLabel>Хадгаламжийн тоо</StatLabel>
-              <StatValue>{financeData.savings?.length || 0}</StatValue>
-            </StatItem>
-            <StatItem>
-              <StatLabel>Сарын зорилгод харьцуулбал</StatLabel>
-              <StatValue>
-                {financeData.goal?.monthlyTarget > 0
-                  ? Math.round(
-                      (financeData.monthlySavings /
-                        financeData.goal.monthlyTarget) *
-                        100
-                    )
-                  : 0}
-                %
-              </StatValue>
-            </StatItem>
-          </StatGrid>
-
-          {/* 목표 적금 정보 */}
-          <div
-            style={{
-              marginTop: "1em",
-              padding: "1em",
-              background: "#f8f9fa",
-              borderRadius: "12px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "0.5em",
-              }}
-            >
-              <span style={{ fontWeight: "bold", color: "#4CAF50" }}>
-                🎯 Зорилгын хадгаламж:
-              </span>
-              <span style={{ fontWeight: "bold", color: "#4CAF50" }}>
-                {financeData.monthlyTargetSavings?.toLocaleString()}₮
-              </span>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "0.5em",
-              }}
-            >
-              <span style={{ color: "#666" }}>➕ Нэмэлт хадгалах боломж:</span>
-              <span style={{ fontWeight: "bold", color: "#FF9800" }}>
-                {Math.max(
-                  0,
-                  financeData.availableForSavings -
-                    financeData.monthlyTargetSavings
-                )?.toLocaleString()}
-                ₮
-              </span>
-            </div>
-
-            {/* 목표 달성 가이드 */}
-            {financeData.goal && financeData.availableForSavings > 0 && (
-              <div
-                style={{
-                  marginTop: "0.8em",
-                  padding: "0.8em",
-                  background: "#e8f5e8",
-                  borderRadius: "8px",
-                  border: "1px solid #4CAF50",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "0.9rem",
-                    color: "#2E7D32",
-                    fontWeight: "bold",
-                    marginBottom: "0.3em",
-                  }}
-                >
-                  💡 Зорилго хурдан биелүүлэх зөвлөмж:
-                </div>
-                <div style={{ fontSize: "0.8rem", color: "#666" }}>
-                  Энэ сард{" "}
-                  {Math.min(
-                    financeData.availableForSavings,
-                    financeData.goal.targetAmount - financeData.totalSavings
-                  )?.toLocaleString()}
-                  ₮ хадгалбал зорилгын{" "}
-                  {(
-                    (Math.min(
-                      financeData.availableForSavings,
-                      financeData.goal.targetAmount - financeData.totalSavings
-                    ) /
-                      (financeData.goal.targetAmount -
-                        financeData.totalSavings)) *
-                    100
-                  )?.toFixed(1)}
-                  % биелнэ!
-                </div>
-              </div>
-            )}
-
-            <div style={{ textAlign: "center", marginTop: "0.5em" }}>
-              <AddButton
-                onClick={() => openModal("target-savings")}
-                style={{
-                  background: "#4CAF50",
-                  fontSize: "0.9rem",
-                  padding: "0.5em 1em",
-                }}
-              >
-                ✏️ Зорилго тохируулах
-              </AddButton>
-            </div>
-          </div>
-
-          {/* 적금 리스트 */}
-          {financeData.savings && financeData.savings.length > 0 && (
-            <div style={{ marginTop: "1em" }}>
-              <h4
-                style={{
-                  fontSize: "1rem",
-                  color: "#666",
-                  marginBottom: "0.5em",
-                }}
-              >
-                Хадгаламжийн жагсаалт:
-              </h4>
-              {financeData.savings.map((saving, index) => (
-                <div
-                  key={saving._id || index}
-                  style={{
-                    background: "#f8f9fa",
-                    padding: "0.8em",
-                    borderRadius: "8px",
-                    marginBottom: "0.5em",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontWeight: "bold", color: "#4CAF50" }}>
-                      Хадгаламж - {saving.amount?.toLocaleString()}₮
-                    </div>
-                    <div style={{ fontSize: "0.8rem", color: "#666" }}>
-                      {saving.date
-                        ? new Date(saving.date).toLocaleDateString("mn-MN")
-                        : ""}
-                    </div>
-                    {saving.description && (
-                      <div
-                        style={{
-                          fontSize: "0.8rem",
-                          color: "#888",
-                          fontStyle: "italic",
-                        }}
-                      >
-                        {saving.description}
-                      </div>
-                    )}
-                  </div>
-                  <AddButton
-                    onClick={() => handleEditSavingsClick(saving)}
-                    style={{
-                      background: "#ffb3d1",
-                      fontSize: "0.8rem",
-                      padding: "0.3em 0.8em",
-                      margin: 0,
-                    }}
-                  >
-                    ✏️
-                  </AddButton>
-                </div>
-              ))}
-            </div>
-          )}
         </Card>
 
         {/* 액션 버튼들 */}
