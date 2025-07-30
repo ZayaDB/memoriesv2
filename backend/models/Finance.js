@@ -44,6 +44,7 @@ const financeSchema = new mongoose.Schema({
   savings: [savingsSchema],
   // 계산된 값들
   availableForSavings: { type: Number, default: 0 }, // 적금 가능 금액
+  monthlyTargetSavings: { type: Number, default: 0 }, // 이번 달 목표 적금 (사용자 설정)
   goalProgress: { type: Number, default: 0 }, // 목표 달성률 (%)
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

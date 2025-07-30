@@ -207,6 +207,30 @@ router.post("/savings", async (req, res) => {
   }
 });
 
+// 목표 적금 설정
+router.post("/target-savings", async (req, res) => {
+  const { coupleId, monthlyTargetSavings } = req.body;
+  if (!coupleId || monthlyTargetSavings === undefined) {
+    return res
+      .status(400)
+      .json({ error: "커플ID와 목표 적금 금액이 필요합니다" });
+  }
+
+  try {
+    let finance = await Finance.findOne({ coupleId });
+    if (!finance) {
+      finance = await Finance.create({ coupleId });
+    }
+
+    finance.monthlyTargetSavings = Number(monthlyTargetSavings);
+    await finance.save();
+    res.json(finance);
+  } catch (error) {
+    console.error("목표 적금 설정 에러:", error);
+    res.status(500).json({ error: "목표 적금 설정 실패" });
+  }
+});
+
 // 수익 수정
 router.patch("/income/:id", async (req, res) => {
   const { coupleId, amount, category, name, date, description } = req.body;
