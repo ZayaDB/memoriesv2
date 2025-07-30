@@ -214,6 +214,7 @@ export default function Finance({ user, coupleId }) {
     totalSavings: 0,
     savings: [],
     availableForSavings: 0,
+    monthlyTargetSavings: 0,
     goalProgress: 0,
   });
   const [modalType, setModalType] = useState("");
@@ -437,6 +438,31 @@ export default function Finance({ user, coupleId }) {
     }
   };
 
+  // 목표 적금 설정
+  const handleSetTargetSavings = async () => {
+    try {
+      const response = await fetch(
+        "https://memories-production-1440.up.railway.app/api/finance/target-savings",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            coupleId,
+            monthlyTargetSavings: parseInt(formData.monthlyTargetSavings),
+          }),
+        }
+      );
+      if (response.ok) {
+        alert("Сарын зорилгын хадгаламж тохируулагдлаа!");
+        setModalOpen(false);
+        loadFinanceData();
+      }
+    } catch (error) {
+      console.error("목표 적금 설정 에러:", error);
+      alert("목표 적금 설정에 실패했습니다.");
+    }
+  };
+
   // 수정 함수들
   const handleEditGoal = async () => {
     try {
@@ -602,6 +628,11 @@ export default function Finance({ user, coupleId }) {
           endDate: "",
         });
       }
+    } else if (type === "target-savings") {
+      setFormData({
+        monthlyTargetSavings:
+          financeData.monthlyTargetSavings?.toString() || "",
+      });
     } else if (type === "income") {
       if (item) {
         // 수정 모드
@@ -966,6 +997,61 @@ export default function Finance({ user, coupleId }) {
             </StatItem>
           </StatGrid>
 
+          {/* 목표 적금 정보 */}
+          <div
+            style={{
+              marginTop: "1em",
+              padding: "1em",
+              background: "#f8f9fa",
+              borderRadius: "12px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "0.5em",
+              }}
+            >
+              <span style={{ fontWeight: "bold", color: "#4CAF50" }}>
+                🎯 Сарын зорилгын хадгаламж:
+              </span>
+              <span style={{ fontWeight: "bold", color: "#4CAF50" }}>
+                {financeData.monthlyTargetSavings?.toLocaleString()}₮
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span style={{ color: "#666" }}>➕ Нэмэлт хадгалах боломж:</span>
+              <span style={{ fontWeight: "bold", color: "#FF9800" }}>
+                {Math.max(
+                  0,
+                  financeData.availableForSavings -
+                    financeData.monthlyTargetSavings
+                )?.toLocaleString()}
+                ₮
+              </span>
+            </div>
+            <div style={{ textAlign: "center", marginTop: "0.5em" }}>
+              <AddButton
+                onClick={() => openModal("target-savings")}
+                style={{
+                  background: "#4CAF50",
+                  fontSize: "0.9rem",
+                  padding: "0.5em 1em",
+                }}
+              >
+                ✏️ Зорилго тохируулах
+              </AddButton>
+            </div>
+          </div>
+
           {/* 적금 리스트 */}
           {financeData.savings && financeData.savings.length > 0 && (
             <div style={{ marginTop: "1em" }}>
@@ -1093,6 +1179,8 @@ export default function Finance({ user, coupleId }) {
                 >
                   {modalType === "goal"
                     ? "🎯 Зорилго тохируулах"
+                    : modalType === "target-savings"
+                    ? "🎯 Сарын зорилгын хадгаламж тохируулах"
                     : modalType === "income"
                     ? "💰 Орлого нэмэх"
                     : modalType === "fixed-expense"
@@ -1127,6 +1215,22 @@ export default function Finance({ user, coupleId }) {
                       value={formData.endDate || ""}
                       onChange={(e) =>
                         setFormData({ ...formData, endDate: e.target.value })
+                      }
+                    />
+                  </>
+                )}
+
+                {modalType === "target-savings" && (
+                  <>
+                    <Input
+                      type="number"
+                      placeholder="Сарын зорилгын хадгаламж (₮)"
+                      value={formData.monthlyTargetSavings || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          monthlyTargetSavings: e.target.value,
+                        })
                       }
                     />
                   </>
@@ -1266,6 +1370,8 @@ export default function Finance({ user, coupleId }) {
                           : handleEditSavings
                         : modalType === "goal"
                         ? handleSetGoal
+                        : modalType === "target-savings"
+                        ? handleSetTargetSavings
                         : modalType === "income"
                         ? handleAddIncome
                         : modalType === "fixed-expense"
