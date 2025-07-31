@@ -141,18 +141,18 @@ const Register = ({ mode, inviteCode, onRegister }) => {
 
       if (mode === "create") {
         // 커플방 생성
-        const cRes = await fetch(`${API_BASE}/api/couple`, {
+        const cRes = await fetch(`${API_BASE}/api/couple/create`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId }),
         });
         const cData = await cRes.json();
         if (cRes.ok) {
-          setCreatedCode(cData.couple.inviteCode);
+          setCreatedCode(cData.inviteCode);
           setMessage(
             "Хосуудын өрөө үүсгэгдлээ! Доорх урилгын кодыг хамтрагчдад дамжуулна уу."
           );
-          if (onRegister) onRegister(cData.couple);
+          if (onRegister) onRegister(cData);
         } else {
           setError(cData.message || "Хосуудын өрөө үүсгэхэд алдаа гарлаа.");
         }

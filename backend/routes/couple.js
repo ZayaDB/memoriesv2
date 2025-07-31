@@ -16,6 +16,27 @@ function generateInviteCode(length = 6) {
 }
 
 // 1. 커플방 생성 (초대코드 자동 생성, 본인 멤버로 추가)
+router.post("/", async (req, res) => {
+  try {
+    const { userId, name } = req.body; // userId는 프론트에서 전달 또는 인증 미들웨어로 대체
+    let inviteCode;
+    let exists = true;
+    // 중복 없는 초대코드 생성
+    while (exists) {
+      inviteCode = generateInviteCode();
+      exists = await Couple.findOne({ inviteCode });
+    }
+    const couple = new Couple({ inviteCode, members: [userId], name });
+    await couple.save();
+    // 유저 coupleId 업데이트
+    await User.findByIdAndUpdate(userId, { coupleId: couple._id });
+    res.json({ coupleId: couple._id, inviteCode, couple });
+  } catch (err) {
+    res.status(500).json({ message: "커플방 생성 실패", error: err.message });
+  }
+});
+
+// 1. 커플방 생성 (초대코드 자동 생성, 본인 멤버로 추가)
 router.post("/create", async (req, res) => {
   try {
     const { userId, name } = req.body; // userId는 프론트에서 전달 또는 인증 미들웨어로 대체
