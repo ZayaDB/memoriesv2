@@ -62,8 +62,16 @@ function App() {
   }
 
   // Register에서 회원가입 성공 시
-  function handleRegisterSuccess() {
-    setOnboarding((prev) => ({ ...prev, step: "login" }));
+  function handleRegisterSuccess(registerData) {
+    if (registerData && registerData.user) {
+      // 회원가입 성공 시 바로 로그인 처리
+      setUser(registerData.user);
+      setOnboarding({ step: "done" });
+      localStorage.setItem("user", JSON.stringify(registerData.user));
+    } else {
+      // 기존 방식: 로그인 페이지로 이동
+      setOnboarding((prev) => ({ ...prev, step: "login" }));
+    }
   }
 
   // Login에서 로그인 성공 시

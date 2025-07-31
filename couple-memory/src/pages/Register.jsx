@@ -117,12 +117,14 @@ const Register = ({ mode, inviteCode, onRegister }) => {
     setMessage("");
     try {
       // 1. 회원가입
+      console.log("회원가입 시작:", { name, email });
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
       const data = await res.json();
+      console.log("회원가입 응답:", res.status, data);
       if (!res.ok) {
         setError(data.message || "Бүртгүүлэхэд алдаа гарлаа.");
         setLoading(false);
@@ -131,6 +133,7 @@ const Register = ({ mode, inviteCode, onRegister }) => {
 
       // 2. 회원가입 성공 후 커플방 생성/입장
       const userId = data.user._id;
+      console.log("생성된 사용자 ID:", userId);
       if (!userId) {
         setError(
           "Бүртгүүлсний дараа хэрэглэгчийн ID олдсонгүй. Админтай холбогдоно уу."
@@ -141,18 +144,20 @@ const Register = ({ mode, inviteCode, onRegister }) => {
 
       if (mode === "create") {
         // 커플방 생성
+        console.log("커플방 생성 시작 - userId:", userId);
         const cRes = await fetch(`${API_BASE}/api/couple/create`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId }),
         });
         const cData = await cRes.json();
+        console.log("커플방 생성 응답:", cRes.status, cData);
         if (cRes.ok) {
           setCreatedCode(cData.inviteCode);
           setMessage(
             "Хосуудын өрөө үүсгэгдлээ! Доорх урилгын кодыг хамтрагчдад дамжуулна уу."
           );
-          if (onRegister) onRegister(cData);
+          if (onRegister) onRegister({ user: data.user, couple: cData });
         } else {
           setError(cData.message || "Хосуудын өрөө үүсгэхэд алдаа гарлаа.");
         }
@@ -166,7 +171,7 @@ const Register = ({ mode, inviteCode, onRegister }) => {
         const jData = await jRes.json();
         if (jRes.ok) {
           setMessage("Хосуудын өрөөнд амжилттай орлоо!");
-          if (onRegister) onRegister(jData.couple);
+          if (onRegister) onRegister({ user: data.user, couple: jData.couple });
         } else {
           setError(jData.message || "Хосуудын өрөөнд ороход алдаа гарлаа.");
         }
