@@ -157,7 +157,7 @@ const Register = ({ mode, inviteCode, onRegister }) => {
           setMessage(
             "Хосуудын өрөө үүсгэгдлээ! Доорх урилгын кодыг хамтрагчдад дамжуулна уу."
           );
-          if (onRegister) onRegister({ user: data.user, couple: cData });
+          // onRegister() 호출을 제거하고 초대코드 표시 후 사용자가 다음 버튼을 클릭하도록 함
         } else {
           setError(cData.message || "Хосуудын өрөө үүсгэхэд алдаа гарлаа.");
         }
@@ -171,7 +171,7 @@ const Register = ({ mode, inviteCode, onRegister }) => {
         const jData = await jRes.json();
         if (jRes.ok) {
           setMessage("Хосуудын өрөөнд амжилттай орлоо!");
-          if (onRegister) onRegister({ user: data.user, couple: jData.couple });
+          if (onRegister) onRegister();
         } else {
           setError(jData.message || "Хосуудын өрөөнд ороход алдаа гарлаа.");
         }
@@ -226,12 +226,31 @@ const Register = ({ mode, inviteCode, onRegister }) => {
               <div style={{ marginBottom: "1em", color: "#666" }}>
                 Миний урилгын код: <b>{createdCode}</b>
               </div>
-              <Button
-                onClick={copyToClipboard}
-                style={{ fontSize: "0.9em", padding: "0.7em 1.5em" }}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "1em",
+                  justifyContent: "center",
+                }}
               >
-                Хуулах
-              </Button>
+                <Button
+                  onClick={copyToClipboard}
+                  style={{ fontSize: "0.9em", padding: "0.7em 1.5em" }}
+                >
+                  Хуулах
+                </Button>
+                <Button
+                  onClick={() => onRegister && onRegister()}
+                  style={{
+                    fontSize: "0.9em",
+                    padding: "0.7em 1.5em",
+                    background:
+                      "linear-gradient(90deg, #4CAF50 0%, #45a049 100%)",
+                  }}
+                >
+                  Дараах
+                </Button>
+              </div>
             </div>
           )}
 
