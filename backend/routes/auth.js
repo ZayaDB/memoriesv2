@@ -8,7 +8,7 @@ const router = express.Router();
 // 회원가입
 router.post("/register", async (req, res) => {
   try {
-    const { email, password, nickname } = req.body;
+    const { email, password, name } = req.body;
     // 이메일 중복 체크
     const existingUser = await User.findOne({ email });
     if (existingUser)
@@ -18,7 +18,7 @@ router.post("/register", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 유저 생성
-    const user = new User({ email, password: hashedPassword, nickname });
+    const user = new User({ email, password: hashedPassword, nickname: name });
     await user.save();
 
     res.status(201).json({
